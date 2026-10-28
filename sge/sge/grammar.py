@@ -28,6 +28,9 @@ class Grammar:
         self.index_of_non_terminal = {}
         self.shortest_path = {}
 
+    def reset(self):
+        self.__init__()
+
     def set_path(self, grammar_path):
         self.grammar_file = grammar_path
 
@@ -445,6 +448,7 @@ get_index_of_non_terminal = _inst.get_index_of_non_terminal
 ordered_non_terminals = _inst.ordered_non_terminals
 max_init_depth = _inst.get_max_init_depth
 python_filter = _inst.python_filter
+reset = _inst.reset
 if __name__ == "__main__":
     np.random.seed(42)
     g = Grammar("grammars/regression.txt", 9)

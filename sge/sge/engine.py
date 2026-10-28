@@ -42,13 +42,18 @@ def evaluate(ind, eval_func):
     ind['grammar_counter'] = grammar_counter
 
 
-def setup(parameters_file_path = None):
+def setup(parameters_file_path = None, options_dict = None):
     if parameters_file_path is not None:
         load_parameters(file_name=parameters_file_path)
-    set_parameters(sys.argv[1:])
+    if options_dict is not None:
+        params.update(options_dict)
+    else:
+        set_parameters(sys.argv[1:])
     if params['SEED'] is None:
         params['SEED'] = int(datetime.now().microsecond)
-    params['EXPERIMENT_NAME'] += "/" + str(params['LEARNING_FACTOR'] * 100)
+    lf_suffix = "/" + str(params['LEARNING_FACTOR'] * 100)
+    if not params['EXPERIMENT_NAME'].endswith(lf_suffix):
+        params['EXPERIMENT_NAME'] += lf_suffix
 
     logger.prepare_dumps()
     np.random.seed(int(params['SEED']))
@@ -58,8 +63,8 @@ def setup(parameters_file_path = None):
     grammar.read_grammar()
 
 
-def evolutionary_algorithm(evaluation_function=None, parameters_file=None):
-    setup(parameters_file_path=parameters_file)
+def evolutionary_algorithm(evaluation_function=None, parameters_file=None, options_dict=None):
+    setup(parameters_file_path=parameters_file, options_dict=options_dict)
     population = list(make_initial_population())
     flag = False    # alternate False - best overall
     best = None
@@ -117,4 +122,6 @@ def evolutionary_algorithm(evaluation_function=None, parameters_file=None):
 
         population = new_population
         it += 1
+    return best, copy.deepcopy(grammar.get_pcfg())
+
 
