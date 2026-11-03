@@ -4,3 +4,4 @@
 .pytest_cache
 *.pyc
 dumps/*
+server/local.env

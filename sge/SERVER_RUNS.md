@@ -1,5 +1,8 @@
 # Running the SA-PSGE pilot grid on a server
 
+> **Superseded for launching:** use the scripts in `server/` (see `server/README.md`). They wrap the
+> commands below, write results outside the repository and record metadata. This file is kept as background.
+
 Pilot / tuning only (nguyen5, nguyen1). Validation set only: these scripts never generate the test set.
 Background and results so far: `CHANGELOG_SA_PSGE.md`.
 
