@@ -17,7 +17,11 @@ def calculate_unique_percentage(population_phenotypes):
 
 def evolution_progress(generation, pop, best, best_gen, gram):
     fitness_samples = [i['fitness'] for i in pop]
-    test_error_samples = [i['other_info']['test_error'] for i in pop]
+    test_error_samples = np.array([i['other_info'].get('test_error', np.nan) for i in pop], dtype=float)
+    if np.all(np.isnan(test_error_samples)):
+        test_err_mean = test_err_std = np.nan  # test not tracked online (default)
+    else:
+        test_err_mean, test_err_std = np.nanmean(test_error_samples), np.nanstd(test_error_samples)
     depth_samples = [i['tree_depth'] for i in pop]
     length_used_genotype_best = sum(i for i in best['mapping_values'])
     phenotypes = [i['phenotype'] for i in pop]
@@ -30,8 +34,8 @@ def evolution_progress(generation, pop, best, best_gen, gram):
         np.nanmean(fitness_samples),
         np.nanstd(fitness_samples),
         best.get('other_info', {}).get('test_error', np.nan),  # safe access
-        np.nanmean(test_error_samples),
-        np.nanstd(test_error_samples),
+        test_err_mean,
+        test_err_std,
         best['tree_depth'],
         np.nanmean(depth_samples),
         np.nanmedian(depth_samples),

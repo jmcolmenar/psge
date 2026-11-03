@@ -9,6 +9,7 @@ from sge.operators.recombination import crossover
 from sge.operators.mutation import mutate, mutate_level, mutation_prob_mutation
 from sge.operators.selection import tournament
 from sge.operators.update import independent_update
+from sge.operators.stability_aware_update import perform_grammar_update, reset_sa_rng
 from sge.parameters import (
     params,
     set_parameters,
@@ -57,6 +58,7 @@ def setup(parameters_file_path = None, options_dict = None):
 
     logger.prepare_dumps()
     np.random.seed(int(params['SEED']))
+    reset_sa_rng(int(params['SEED']))  # SA-PSGE views use their own stream
     grammar.set_path(params['GRAMMAR'])
     grammar.set_max_tree_depth(params['MAX_TREE_DEPTH'])
     grammar.set_min_init_tree_depth(params['MIN_TREE_DEPTH'])
@@ -82,10 +84,7 @@ def evolutionary_algorithm(evaluation_function=None, parameters_file=None, optio
         elif population[0]['fitness'] <= best['fitness']:
             best = copy.deepcopy(population[0])
      
-        if not flag:
-            independent_update(population, params['LEARNING_FACTOR'], params['N_BEST'])
-        else:
-            independent_update([best_gen]+population, params['LEARNING_FACTOR'], params['N_BEST'])
+        perform_grammar_update(population, best_gen, flag, evaluation_function, it)
         flag = not flag
 
         if params['ADAPTIVE_LF']:

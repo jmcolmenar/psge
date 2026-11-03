@@ -5,3 +5,4 @@ from .utilities.protected_math import *
 from .utilities.ordered_set import *
 from .grammar import *
 from .stability import *
+from .operators.stability_aware_update import *

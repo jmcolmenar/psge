@@ -31,6 +31,17 @@ params = {'PARAMETERS': None,
           'PROB_MUTATION_PROBS': 0.3,
           'GAUSS_SD': 0.01,
           'GRAMMAR_PROBS': None,
+          'ALGORITHM': 'psge',
+          'KL_DELTA': 6e-5,
+          'SA_K_VIEWS': 3,
+          'SA_LAMBDA': 0.5,
+          'SA_BETA': 1.0,
+          'SA_ETA': 0.04,                   # SA-PSGE step size, decoupled from LEARNING_FACTOR. KL-matched to PSGE(lf=0.01)
+                                            # on nguyen1/nguyen5, pop200/gen50 (examples/calibrate_sa_eta.py, 2026-11-03)
+          'SA_ALPHA': 0.005,                # uniform mixture; must be << update magnitude
+          'SA_P_MIN': 0.001,
+          'SA_TAU': 1,
+          'SA_ELITE_RATIO': 0.10,
           }
 
 
@@ -148,6 +159,47 @@ def set_parameters(arguments):
                         dest='VERBOSE',
                         type=strtobool,
                         help='Turns on the verbose output of the program.')
+    parser.add_argument('--algorithm',
+                        dest='ALGORITHM',
+                        type=str,
+                        choices=['sge', 'psge', 'psge_kl', 'sa_psge'],
+                        help='Specifies which algorithm to run: sge, psge, psge_kl, or sa_psge.')
+    parser.add_argument('--kl_delta',
+                        dest='KL_DELTA',
+                        type=float,
+                        help='KL divergence bound delta for PSGE-KL.')
+    parser.add_argument('--sa_k_views',
+                        dest='SA_K_VIEWS',
+                        type=int,
+                        help='Number of subsampled views K for SA-PSGE.')
+    parser.add_argument('--sa_lambda',
+                        dest='SA_LAMBDA',
+                        type=float,
+                        help='Stability trade-off parameter lambda in SA-PSGE (0.0 = ablation).')
+    parser.add_argument('--sa_beta',
+                        dest='SA_BETA',
+                        type=float,
+                        help='Concentration parameter beta for exponential rank weighting in SA-PSGE.')
+    parser.add_argument('--sa_eta',
+                        dest='SA_ETA',
+                        type=float,
+                        help='Step size eta of the SA-PSGE multiplicative update (independent of --learning_factor).')
+    parser.add_argument('--sa_alpha',
+                        dest='SA_ALPHA',
+                        type=float,
+                        help='Uniform mixture coefficient alpha in SA-PSGE.')
+    parser.add_argument('--sa_p_min',
+                        dest='SA_P_MIN',
+                        type=float,
+                        help='Minimum rule probability floor p_min in SA-PSGE.')
+    parser.add_argument('--sa_tau',
+                        dest='SA_TAU',
+                        type=int,
+                        help='Update interval tau in generations for SA-PSGE.')
+    parser.add_argument('--sa_elite_ratio',
+                        dest='SA_ELITE_RATIO',
+                        type=float,
+                        help='Fraction of population used for SA-PSGE credit calculation.')
 
     # Parse command line arguments using all above information.
     args, _ = parser.parse_known_args(arguments)
