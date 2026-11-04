@@ -50,6 +50,10 @@ require_clean_tree() {
 guard_commit() {
   local dir="$1" head; head="$(git rev-parse HEAD)"
   mkdir -p "$dir"
+  # Un directorio sin resultados (p. ej., tras un arranque fallido) se vuelve a fijar sin preguntar.
+  if [ -f "$dir/.commit" ] && [ -z "$(find "$dir" -mindepth 1 ! -name .commit -print -quit)" ]; then
+    rm -f "$dir/.commit"
+  fi
   if [ ! -f "$dir/.commit" ]; then
     echo "$head" > "$dir/.commit"
   elif [ "$(cat "$dir/.commit")" != "$head" ] && [ "${ALLOW_COMMIT_CHANGE:-0}" != "1" ]; then
