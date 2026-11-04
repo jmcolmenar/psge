@@ -45,10 +45,33 @@ def nguyen9(x):
     return np.sin(x0) + np.sin(x1**2)
 
 
+EULER_GAMMA = 0.57721566490153286061
+
+
+def _digamma(x):
+    """Digamma psi(x) para x > 0 (recurrencia hasta x >= 6 y serie asintótica; error < 1e-12)."""
+    x = float(x)
+    acc = 0.0
+    while x < 6.0:
+        acc -= 1.0 / x
+        x += 1.0
+    inv = 1.0 / x
+    inv2 = inv * inv
+    series = inv2 * (1.0 / 12 - inv2 * (1.0 / 120 - inv2 * (1.0 / 252 - inv2 * (1.0 / 240 - inv2 * (1.0 / 132)))))
+    return acc + np.log(x) - 0.5 * inv - series
+
+
 def keijzer6(x):
-    """Keijzer-6: Harmonic number, y = sum_{i=1}^{floor(x)} 1/i"""
-    x0 = int(np.clip(x[0] if isinstance(x, (list, tuple, np.ndarray)) else x, 1, 120))
-    return sum(1.0 / i for i in range(1, x0 + 1))
+    """Keijzer-6: número armónico H(x) = sum_{i=1}^{x} 1/i (Keijzer 2003; McDermott et al. 2012).
+
+    El original usa x ENTERO: entrenamiento E[1, 50, 1], test E[1, 120, 1]. Con enteros, m = 100 puntos
+    distintos es imposible (solo hay 50), así que se usa la extensión continua exacta
+    H(x) = psi(x + 1) + gamma, que coincide con la suma en cada entero y es suave entre ellos
+    (desviación documentada, decisión del 2026-11-04). Entrenamiento U[1, 50]; validación y test U[1, 120]
+    (interpolación + extrapolación, como el test original).
+    """
+    x0 = x[0] if isinstance(x, (list, tuple, np.ndarray)) else x
+    return _digamma(float(x0) + 1.0) + EULER_GAMMA
 
 
 def pagie1(x):
@@ -108,9 +131,9 @@ BENCHMARK_SPECS = {
         "function": keijzer6,
         "n_vars": 1,
         "train_domain": [(1.0, 50.0)],
-        "test_domain": [(51.0, 120.0)],
+        "test_domain": [(1.0, 120.0)],
         "grammar": "grammars/regression_1v.pybnf",
-        "description": "Keijzer-6: Harmonic number"
+        "description": "Keijzer-6: Harmonic number, continuous extension psi(x+1)+gamma"
     },
     "pagie1": {
         "function": pagie1,

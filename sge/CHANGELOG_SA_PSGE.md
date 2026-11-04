@@ -134,14 +134,16 @@
   - Pagie-1: el original usa la rejilla E[−5; 5; 0,4] sin test; se mantiene U[−5; 5]² por el protocolo add-one
     (desviación documentada).
   - Nguyen-7, Nguyen-9, Nguyen-1, Nguyen-5: coinciden.
-  - Keijzer-6: pendiente de decisión (el original usa enteros E[1; 50; 1] / E[1; 120; 1]; el código muestrea
-    reales y trunca, y valida solo en [51; 120]).
-  - `tests/test_benchmarks.py` (5 tests): cada gramática cubre todas las variables de su problema y comparte el
+  - Keijzer-6 (decisión del investigador, opción B): extensión continua exacta H(x) = ψ(x+1) + γ, que coincide con
+    la suma armónica en cada entero. Entrenamiento U[1; 50]; validación y test U[1; 120]. El original usa enteros
+    (E[1; 50; 1] / E[1; 120; 1]), con los que m = 100 sería imposible; el código anterior truncaba x real (función
+    escalonada) y validaba solo en [51; 120].
+  - `tests/test_benchmarks.py` (7 tests): cada gramática cubre todas las variables de su problema y comparte el
     resto de reglas con las demás; dominios de Vladislavleva; valores de referencia.
 - `server/common.sh`: las variables puestas al lanzar tienen prioridad sobre `local.env`.
 
 ## Tests
-`python3 -m unittest tests.test_stability tests.test_sa_psge tests.test_invalid_rule tests.test_stats_utils tests.test_benchmarks` → 30 tests OK.
+`python3 -m unittest tests.test_stability tests.test_sa_psge tests.test_invalid_rule tests.test_stats_utils tests.test_benchmarks` → 32 tests OK.
 
 ## Pendiente (no hecho)
 - Paso 5 (congelación): decidir si se congela eta = 0,08 / alpha = 0,01 o se amplía (eta = 0,16; lambda, beta, K, tau
