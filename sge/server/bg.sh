@@ -6,7 +6,9 @@
 #   server/bg.sh launch.sh rq1_pilot python -m examples.run_pilot_campaign ...
 set -euo pipefail
 HERE="$(cd "$(dirname "$0")" && pwd)"
+_env_RESULTS_ROOT="${RESULTS_ROOT:-}"
 if [ -f "$HERE/local.env" ]; then source "$HERE/local.env"; fi
+[ -n "$_env_RESULTS_ROOT" ] && RESULTS_ROOT="$_env_RESULTS_ROOT"
 : "${RESULTS_ROOT:=$HOME/psge-results}"
 
 if [ $# -lt 1 ]; then echo "Uso: $0 SCRIPT [args...]   (p. ej. $0 run_phaseB.sh 16)" >&2; exit 2; fi

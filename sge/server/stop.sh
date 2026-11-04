@@ -3,7 +3,9 @@
 # Uso: server/stop.sh [fichero.pid]   (sin argumento: el último lanzado)
 set -euo pipefail
 HERE="$(cd "$(dirname "$0")" && pwd)"
+_env_RESULTS_ROOT="${RESULTS_ROOT:-}"
 if [ -f "$HERE/local.env" ]; then source "$HERE/local.env"; fi
+[ -n "$_env_RESULTS_ROOT" ] && RESULTS_ROOT="$_env_RESULTS_ROOT"
 : "${RESULTS_ROOT:=$HOME/psge-results}"
 
 pidfile="${1:-$(ls -t "$RESULTS_ROOT"/bg/*.pid 2>/dev/null | head -1)}"

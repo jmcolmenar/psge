@@ -5,7 +5,9 @@
 #   --full:      además los directorios de cada ejecución (gramática por generación, progress_report)
 set -euo pipefail
 HERE="$(cd "$(dirname "$0")" && pwd)"
+_env_RESULTS_ROOT="${RESULTS_ROOT:-}"
 if [ -f "$HERE/local.env" ]; then source "$HERE/local.env"; fi
+[ -n "$_env_RESULTS_ROOT" ] && RESULTS_ROOT="$_env_RESULTS_ROOT"
 : "${SERVER:?Define SERVER en server/local.env}"
 : "${SERVER_RESULTS:=psge-results}"
 : "${LOCAL_RESULTS:=$HOME/psge-results}"

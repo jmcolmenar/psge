@@ -1,0 +1,38 @@
+# Configuración CONGELADA para el estudio confirmatorio GECCO (no modificar sin documentarlo).
+# Fichero de parámetros completo: se pasa tal cual como parameters_file al motor.
+# Origen de cada valor: CHANGELOG_SA_PSGE.md.
+#
+# Supuesto documentado: los hiperparámetros de SA-PSGE se ajustaron a 200 x 50 en los pilotos
+# (nguyen1, nguyen5) y se aplican a 500 x 100. KL_DELTA se recalibra a 500 x 100.
+
+# --- Presupuesto y operadores (comunes a todos los algoritmos) ---
+POPSIZE: 500
+GENERATIONS: 100
+ELITISM: 5                      # 1 % de la población
+PROB_CROSSOVER: 0.9
+PROB_MUTATION: 0.05
+TSIZE: 3
+MIN_TREE_DEPTH: 12              # profundidad máxima de inicialización (grammar.max_init_depth)
+MAX_TREE_DEPTH: 12
+INCLUDE_GENOTYPE: False
+SAVE_STEP: 1000000
+VERBOSE: False
+
+# --- PSGE (y paso de respaldo de PSGE-KL / SA-PSGE) ---
+LEARNING_FACTOR: 0.01           # SGE se ejecuta con ALGORITHM = sge (sin actualización)
+ADAPTIVE_LF: False
+N_BEST: 1
+
+# --- PSGE-KL ---
+KL_DELTA: PENDIENTE             # = media de los P25 de la KL por actualización de PSGE a 500 x 100
+                                #   (server/run_recalibration.sh). Mientras ponga PENDIENTE, PSGE-KL falla.
+
+# --- SA-PSGE (fase B con 20 semillas de datos y fase C, 2026-11-04) ---
+SA_ETA: 0.08
+SA_ALPHA: 0.01
+SA_LAMBDA: 0.25                 # la ablación "sin señal de estabilidad" usa SA_LAMBDA: 0
+SA_BETA: 2.0
+SA_K_VIEWS: 3
+SA_TAU: 1
+SA_P_MIN: 0.001
+SA_ELITE_RATIO: 0.10

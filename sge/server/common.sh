@@ -6,7 +6,13 @@ SGE_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$SGE_DIR"
 
 # Configuración local de cada máquina (no versionada). Ver server/local.env.example.
+# Las variables puestas al lanzar (RESULTS_ROOT=... server/x.sh) tienen prioridad sobre local.env.
+_env_RESULTS_ROOT="${RESULTS_ROOT:-}"; _env_CONDA_ENV="${CONDA_ENV:-}"; _env_N_JOBS="${N_JOBS:-}"; _env_PYTHON="${PYTHON:-}"
 if [ -f "$SGE_DIR/server/local.env" ]; then source "$SGE_DIR/server/local.env"; fi
+[ -n "$_env_RESULTS_ROOT" ] && RESULTS_ROOT="$_env_RESULTS_ROOT"
+[ -n "$_env_CONDA_ENV" ] && CONDA_ENV="$_env_CONDA_ENV"
+[ -n "$_env_N_JOBS" ] && N_JOBS="$_env_N_JOBS"
+[ -n "$_env_PYTHON" ] && PYTHON="$_env_PYTHON"
 : "${RESULTS_ROOT:=$HOME/psge-results}"   # fuera del repositorio y fuera de OneDrive
 : "${CONDA_ENV:=psge-original}"
 NCPU="$(getconf _NPROCESSORS_ONLN 2>/dev/null || echo 4)"

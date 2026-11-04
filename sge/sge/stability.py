@@ -52,7 +52,9 @@ def keijzer6(x):
 
 
 def pagie1(x):
-    """Pagie-1: y = 1/(1 + x^-4) + 1/(1 + y^-4), x, y in [-5, 5]"""
+    """Pagie-1: y = 1/(1 + x^-4) + 1/(1 + y^-4), x, y in [-5, 5].
+    El original entrena en la rejilla E[-5, 5, 0.4] (676 puntos) sin test; el protocolo add-one
+    necesita S de m puntos, así que se muestrea U[-5, 5]^2 (desviación documentada)."""
     x0, x1 = x[0], x[1]
     denom0 = 1.0 + (x0**(-4) if x0 != 0 else 1e12)
     denom1 = 1.0 + (x1**(-4) if x1 != 0 else 1e12)
@@ -60,13 +62,15 @@ def pagie1(x):
 
 
 def vladislavleva4(x):
-    """Vladislavleva-4: 5D radial function, x in [0, 6]^5"""
+    """Vladislavleva-4 (UBall5D): 10 / (5 + sum_i (x_i - 3)^2).
+    Entrenamiento U[0.05, 6.05]^5, test U[-0.25, 6.35]^5 (Vladislavleva et al. 2009; McDermott et al. 2012)."""
     denom = 5.0 + sum((x[i] - 3.0)**2 for i in range(5))
     return 10.0 / denom
 
 
 def vladislavleva7(x):
-    """Vladislavleva-7: 2D interaction, x in [0, 6]^2"""
+    """Vladislavleva-7: (x0 - 3)(x1 - 3) + 2 sin((x0 - 4)(x1 - 4)).
+    Entrenamiento U[0.05, 6.05]^2, test U[-0.25, 6.35]^2 (Vladislavleva et al. 2009; McDermott et al. 2012)."""
     x0, x1 = x[0], x[1]
     return (x0 - 3.0) * (x1 - 3.0) + 2.0 * np.sin((x0 - 4.0) * (x1 - 4.0))
 
@@ -118,14 +122,16 @@ BENCHMARK_SPECS = {
     "vladislavleva4": {
         "function": vladislavleva4,
         "n_vars": 5,
-        "domain": [(0.0, 6.0)] * 5,
-        "grammar": "grammars/regression.pybnf",
+        "train_domain": [(0.05, 6.05)] * 5,
+        "test_domain": [(-0.25, 6.35)] * 5,
+        "grammar": "grammars/regression_5v.pybnf",
         "description": "Vladislavleva-4: 5D radial"
     },
     "vladislavleva7": {
         "function": vladislavleva7,
         "n_vars": 2,
-        "domain": [(0.0, 6.0), (0.0, 6.0)],
+        "train_domain": [(0.05, 6.05), (0.05, 6.05)],
+        "test_domain": [(-0.25, 6.35), (-0.25, 6.35)],
         "grammar": "grammars/regression.pybnf",
         "description": "Vladislavleva-7: 2D interaction"
     }

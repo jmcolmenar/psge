@@ -113,8 +113,35 @@
   (campos nuevos; los existentes no cambian).
 - `run_pilot_campaign.py` queda obsoleto para RQ1.
 
+## 2026-11-04 (noche): resultados de fase C y RQ1, preparación de la congelación
+- Fase C (λ = 0,25, β = 2; 10 semillas de datos): ninguna variante de K/τ domina a K = 3, τ = 1. τ = 10 y K = 2
+  mejoran la estabilidad en nguyen5 con IC que excluye 0, pero empeoran NRMSE-val (> +2 % en nguyen5, +75 % en
+  nguyen1). Se mantiene K = 3, τ = 1.
+- Piloto RQ1 (commit `77e1634`, 20 × 5, 200 × 50): nguyen5 ΔAPG+ATG (PSGE − SGE) = +0,166, IC BCa [+0,006; +0,29],
+  Wilcoxon p = 0,083, r = +0,45, 14/20; impulsado por ATG (p = 0,015). nguyen1 sin efecto (−0,007; ATG en sentido
+  contrario). Estabilidad de búsqueda y NRMSE-val equivalentes. Spearman JS vs APG+ATG ≈ +0,3, no significativo.
+  Decisión: seguir el protocolo hasta la confirmación sin rediseñar SA-PSGE.
+- `parameters/gecco_frozen.yml`: configuración congelada (500 × 100, profundidad 12, SA-PSGE η = 0,08, α = 0,01,
+  λ = 0,25, β = 2, K = 3, τ = 1). KL_DELTA = PENDIENTE hasta la recalibración.
+- `server/run_recalibration.sh`: KL de PSGE y de SA-PSGE a 500 × 100 en los pilotos. Reglas fijadas antes de ver
+  resultados: KL_DELTA = media de los P25 (2 cifras); η = 0,08 se mantiene salvo que su KL difiera de la de PSGE
+  en más de un factor 3. También mide tiempos para estimar el coste de la confirmación.
+- Benchmarks confirmatorios contrastados con McDermott et al. (2012) y la implementación de HeuristicLab:
+  - **Vladislavleva-4: la gramática `regression.pybnf` solo tenía x[0] y x[1]** (3 de 5 variables inaccesibles).
+    Nueva `grammars/regression_5v.pybnf` (mismas reglas, 5 variables).
+  - Vladislavleva-4 y -7: dominios corregidos a entrenamiento U[0,05; 6,05] y test/validación U[−0,25; 6,35]
+    (antes [0; 6] en ambos).
+  - Pagie-1: el original usa la rejilla E[−5; 5; 0,4] sin test; se mantiene U[−5; 5]² por el protocolo add-one
+    (desviación documentada).
+  - Nguyen-7, Nguyen-9, Nguyen-1, Nguyen-5: coinciden.
+  - Keijzer-6: pendiente de decisión (el original usa enteros E[1; 50; 1] / E[1; 120; 1]; el código muestrea
+    reales y trunca, y valida solo en [51; 120]).
+  - `tests/test_benchmarks.py` (5 tests): cada gramática cubre todas las variables de su problema y comparte el
+    resto de reglas con las demás; dominios de Vladislavleva; valores de referencia.
+- `server/common.sh`: las variables puestas al lanzar tienen prioridad sobre `local.env`.
+
 ## Tests
-`python3 -m unittest tests.test_stability tests.test_sa_psge tests.test_invalid_rule tests.test_stats_utils` → 25 tests OK.
+`python3 -m unittest tests.test_stability tests.test_sa_psge tests.test_invalid_rule tests.test_stats_utils tests.test_benchmarks` → 30 tests OK.
 
 ## Pendiente (no hecho)
 - Paso 5 (congelación): decidir si se congela eta = 0,08 / alpha = 0,01 o se amplía (eta = 0,16; lambda, beta, K, tau
