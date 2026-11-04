@@ -150,6 +150,18 @@
   SA-PSGE evalúa ~20 % más casos que el resto (submuestras de la élite): hay que informarlo en el artículo.
 - `server/run_timing.sh`: coste real a 500 × 100 medido en nguyen5 (piloto), con estimación del estudio completo.
 
+## 2026-11-04: recalibración a 500 × 100 y congelación (tag `gecco-frozen-v1`)
+- Recalibración (commit `d2f5c12`, 5 semillas, profundidad 12). KL por actualización de PSGE, P25: nguyen5 3,68e-5,
+  nguyen1 3,05e-5 -> **KL_DELTA = 3,4e-5** (regla: media de los P25).
+- SA-PSGE con η = 0,08 (λ 0,25, β 2, α 0,01): KL mediana por actualización 2,34× (nguyen5) y 1,87× (nguyen1) la de
+  PSGE, dentro del factor 3 -> **η = 0,08 se mantiene**.
+- Observación (no cambia la decisión): a 500 × 100 SA-PSGE concentra mucho más la gramática que PSGE (entropía final
+  0,56/0,65 frente a 0,88). La KL mediana por actualización no crece con η (η = 0,16 da KL menor que 0,08) porque la
+  gramática se satura y los pasos posteriores son pequeños: la KL mediana es mala vara de medir en ejecuciones largas.
+  Consecuencia para RQ2: SA-PSGE difiere de PSGE en la señal y en el movimiento efectivo de la gramática; la
+  comparación que aísla la señal de estabilidad es SA-PSGE frente a la ablación λ = 0 (mismo η, α y presupuesto).
+- Tiempo por brazo a 500 × 100, m = 20: PSGE 39 s, SA-PSGE 38–48 s.
+
 ## Tests
 `python3 -m unittest tests.test_stability tests.test_sa_psge tests.test_invalid_rule tests.test_stats_utils tests.test_benchmarks` → 32 tests OK.
 

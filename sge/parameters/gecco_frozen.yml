@@ -24,11 +24,12 @@ ADAPTIVE_LF: False
 N_BEST: 1
 
 # --- PSGE-KL ---
-KL_DELTA: PENDIENTE             # = media de los P25 de la KL por actualización de PSGE a 500 x 100
-                                #   (server/run_recalibration.sh). Mientras ponga PENDIENTE, PSGE-KL falla.
+KL_DELTA: 3.4e-05               # = media de los P25 de la KL por actualización de PSGE a 500 x 100
+                                #   (nguyen5 3,68e-5; nguyen1 3,05e-5; server/run_recalibration.sh, commit d2f5c12)
 
 # --- SA-PSGE (fase B con 20 semillas de datos y fase C, 2026-11-04) ---
-SA_ETA: 0.08
+SA_ETA: 0.08                    # recalibración a 500 x 100: KL/actualización = 2,3x (nguyen5) y 1,9x (nguyen1)
+                                #   la de PSGE, dentro del factor 3 fijado -> se mantiene
 SA_ALPHA: 0.01
 SA_LAMBDA: 0.25                 # la ablación "sin señal de estabilidad" usa SA_LAMBDA: 0
 SA_BETA: 2.0
