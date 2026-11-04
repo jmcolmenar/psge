@@ -142,6 +142,14 @@
     resto de reglas con las demás; dominios de Vladislavleva; valores de referencia.
 - `server/common.sh`: las variables puestas al lanzar tienen prioridad sobre `local.env`.
 
+- `examples/run_confirmation.py` + `server/run_confirmation.sh`: estudio confirmatorio (6 benchmarks × m {20, 100} ×
+  ruido {0; 0,05} × 5 algoritmos [sge, psge, psge_kl, sa_psge, sa_psge_lam0] × 20 × 5 semillas = 12 000 ejecuciones
+  emparejadas; semillas 1000../10000..; test de 1000 puntos). Se niega a arrancar con KL_DELTA = PENDIENTE.
+  Guarda APG/ATG, NRMSE de entrenamiento y test, JS, entropía, KL por actualización y coste por brazo.
+- `StabilityEvaluationFunction` cuenta evaluaciones y evaluaciones caso-individuo. En una prueba pequeña,
+  SA-PSGE evalúa ~20 % más casos que el resto (submuestras de la élite): hay que informarlo en el artículo.
+- `server/run_timing.sh`: coste real a 500 × 100 medido en nguyen5 (piloto), con estimación del estudio completo.
+
 ## Tests
 `python3 -m unittest tests.test_stability tests.test_sa_psge tests.test_invalid_rule tests.test_stats_utils tests.test_benchmarks` → 32 tests OK.
 

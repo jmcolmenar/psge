@@ -533,6 +533,9 @@ class StabilityEvaluationFunction:
         self.__train_set = dataset
         self.__test_set = test_set if track_test_online else None
         self.__invalid_fitness = invalid_fitness
+        # Contadores de coste (plan: contabilizar individuos y evaluaciones caso-individuo)
+        self.n_evaluations = 0          # llamadas de evaluación (individuo completo o submuestra)
+        self.n_case_evaluations = 0     # casos evaluados = suma de len(conjunto) en cada llamada
         self.calculate_denominators()
 
     def calculate_denominators(self):
@@ -554,6 +557,8 @@ class StabilityEvaluationFunction:
             return self.__invalid_fitness, {"generation": 0, "evals": 1, "test_error": self.__invalid_fitness}
 
         # Train error (NRMSE)
+        self.n_evaluations += 1
+        self.n_case_evaluations += len(self.__train_set)
         error = calculate_dataset_nrmse(individual, self.__train_set, invalid_fitness=self.__invalid_fitness)
 
         # Test error
@@ -567,4 +572,6 @@ class StabilityEvaluationFunction:
         return self.__train_set
 
     def evaluate_on_dataset(self, individual, subset):
+        self.n_evaluations += 1
+        self.n_case_evaluations += len(subset)
         return calculate_dataset_nrmse(individual, subset, invalid_fitness=self.__invalid_fitness)

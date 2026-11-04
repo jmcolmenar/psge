@@ -41,6 +41,8 @@ segundos y muestra el error. Los scripts también se pueden lanzar sin `bg.sh`, 
 | `run_phaseC.sh LAM BET [J]` | Sensibilidad a K ∈ {2, 5} y τ ∈ {5, 10} (un factor cada vez) con el λ/β elegido |
 | `run_rq1_pilot.sh [J]` | Piloto de RQ1: SGE frente a PSGE, nguyen1 + nguyen5, 20 × 5 semillas, 200 × 50; análisis al final |
 | `run_recalibration.sh [J]` | KL de PSGE (→ δ de PSGE-KL) y de SA-PSGE a 500 × 100 en los pilotos; tiempos para el coste |
+| `run_timing.sh [J]` | Coste real de la confirmación medido en nguyen5 con la configuración congelada |
+| `run_confirmation.sh [J]` | Estudio confirmatorio completo (abre el test); exige KL_DELTA numérico |
 | `launch.sh NOMBRE cmd…` | Cualquier otro experimento con las mismas comprobaciones y metadatos |
 | `bg.sh SCRIPT args…` | Lanza cualquiera de los anteriores en segundo plano, desligado del terminal |
 | `stop.sh [pid]` | Para el último lanzado con `bg.sh` (o el indicado), con todos sus procesos |
