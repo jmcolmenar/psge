@@ -20,21 +20,28 @@ cp server/local.env.example server/local.env   # no se versiona
 
 ## Lanzar en el servidor
 
-Desde `sge/`, dentro de `tmux` (o con `nohup … &`) para que sobreviva al cierre de la sesión ssh:
+Desde `sge/`, con `server/bg.sh` delante del script. El experimento queda desligado del terminal y
+**sigue corriendo al cerrar ssh**:
 
 ```bash
 git pull && python -m unittest tests.test_stability tests.test_sa_psge
-tmux new -s faseB
-server/run_phaseB.sh 16          # 16 procesos por problema (nguyen5 y nguyen1 en paralelo)
-# Ctrl-b d para salir; tmux attach -t faseB para volver
-server/status.sh                 # en otra sesión: ejecuciones completadas por configuración
+server/bg.sh run_phaseB.sh 16    # 16 procesos por problema (nguyen5 y nguyen1 en paralelo)
+# ya puedes cerrar el terminal
+server/status.sh                 # al volver: qué sigue en marcha y cuántas ejecuciones lleva cada config
+tail -f ~/psge-results/bg/run_phaseB_*.out
+server/stop.sh                   # parar el último lanzado (las ejecuciones hechas se conservan)
 ```
+
+Si el script falla al arrancar (cambios sin commit, conda, argumentos), `bg.sh` lo dice en los primeros
+segundos y muestra el error. Los scripts también se pueden lanzar sin `bg.sh`, en primer plano.
 
 | Script | Qué hace |
 |---|---|
 | `run_phaseB.sh [J]` | λ ∈ {0, 0.25, 0.5, 1} × β ∈ {0.5, 1, 2} con η = 0.08, α = 0.01; 10 × 3 semillas; análisis emparejado al final |
 | `run_phaseC.sh LAM BET [J]` | Sensibilidad a K ∈ {2, 5} y τ ∈ {5, 10} (un factor cada vez) con el λ/β elegido |
 | `launch.sh NOMBRE cmd…` | Cualquier otro experimento con las mismas comprobaciones y metadatos |
+| `bg.sh SCRIPT args…` | Lanza cualquiera de los anteriores en segundo plano, desligado del terminal |
+| `stop.sh [pid]` | Para el último lanzado con `bg.sh` (o el indicado), con todos sus procesos |
 | `status.sh [n]` | Procesos vivos, ejecuciones completadas por configuración (sobre n esperadas), errores |
 | `fetch_results.sh [--full]` | **En el portátil.** rsync del servidor a `LOCAL_RESULTS` |
 

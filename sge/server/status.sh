@@ -23,3 +23,12 @@ if [ -n "$last" ]; then
   cat "$last/run_info.txt"
   grep -Hc "ERROR\|Traceback" "$last"/*.log 2>/dev/null || true
 fi
+
+echo; echo "== Lanzados con server/bg.sh"
+found=0
+for f in $(ls -t "$RESULTS_ROOT"/bg/*.pid 2>/dev/null | head -5); do
+  found=1; pid="$(cat "$f")"
+  if kill -0 "$pid" 2>/dev/null; then st="en marcha"; else st="terminado"; fi
+  printf "  %-40s %-10s %s\n" "$(basename "$f" .pid)" "$st" "${f%.pid}.out"
+done
+[ "$found" = 1 ] || echo "  (ninguno)"
