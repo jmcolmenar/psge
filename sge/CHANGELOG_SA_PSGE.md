@@ -84,4 +84,7 @@
 ## Pendiente (no hecho)
 - Paso 5 (congelación): decidir si se congela eta = 0,08 / alpha = 0,01 o se amplía (eta = 0,16; lambda, beta, K, tau
   sin explorar). Decisión del investigador, pendiente.
-- `parameters/standard.yml` usa MIN_TREE_DEPTH = MAX_TREE_DEPTH = 10; el plan dice profundidad máxima 12. Revisar antes de congelar.
+- ~~`parameters/standard.yml` usa MIN_TREE_DEPTH = MAX_TREE_DEPTH = 10~~. **Resuelto (2026-11-04): 12/12.** MAX_TREE_DEPTH = 12 sigue el plan.
+  MIN_TREE_DEPTH es, en el código, la profundidad máxima de inicialización (`grammar.max_init_depth`): a partir de
+  ella solo se usan reglas no recursivas. 12/12 mantiene la convención original de PSGE (10/10). Todas las
+  ejecuciones anteriores (portátil, 10/10) quedan fuera de las comparaciones; el servidor parte de cero.

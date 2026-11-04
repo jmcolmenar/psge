@@ -73,8 +73,8 @@ directorios por ejecución (gramática por generación) se quedan en el servidor
 
 ## Antes de la fase B
 
-- La profundidad (`MIN/MAX_TREE_DEPTH = 10` en `standard.yml`, el plan dice máx. 12) sigue abierta. Decídela
-  **antes** de lanzar: cambiarla después invalida toda la caché.
+- Profundidad fijada en 12/12 (`standard.yml`) desde el commit que lo cambia: las ejecuciones con 10/10 del
+  portátil no se mezclan con las del servidor.
 - Se recomienda **no copiar al servidor las ejecuciones del portátil**: con ~35 s por ejecución emparejada,
   rehacerlo todo cuesta poco y garantiza que todos los resultados salen de la misma máquina y del mismo commit.
 - La caché tampoco distingue `SA_ELITE_RATIO`, `SA_P_MIN`, población/generaciones ni `standard.yml`. Si cambias
