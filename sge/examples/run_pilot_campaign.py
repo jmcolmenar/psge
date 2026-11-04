@@ -1,5 +1,8 @@
 #!/usr/bin/env python3
 """
+OBSOLETO para RQ1: usar examples/run_rq1_pilot.py + examples/analyze_rq1.py (agregación por semilla de
+datos, regla de inválidos, solo validación y estadística correcta). Se conserva por historial.
+
 Automated Pilot Campaign for SGE / PSGE / PSGE-KL / SA-PSGE Algorithmic Stability.
 
 Executes paired Add-One stability experiments across:

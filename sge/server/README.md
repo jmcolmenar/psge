@@ -39,6 +39,7 @@ segundos y muestra el error. Los scripts también se pueden lanzar sin `bg.sh`, 
 |---|---|
 | `run_phaseB.sh [J]` | λ ∈ {0, 0.25, 0.5, 1} × β ∈ {0.5, 1, 2} con η = 0.08, α = 0.01; 10 × 3 semillas; análisis emparejado al final |
 | `run_phaseC.sh LAM BET [J]` | Sensibilidad a K ∈ {2, 5} y τ ∈ {5, 10} (un factor cada vez) con el λ/β elegido |
+| `run_rq1_pilot.sh [J]` | Piloto de RQ1: SGE frente a PSGE, nguyen1 + nguyen5, 20 × 5 semillas, 200 × 50; análisis al final |
 | `launch.sh NOMBRE cmd…` | Cualquier otro experimento con las mismas comprobaciones y metadatos |
 | `bg.sh SCRIPT args…` | Lanza cualquiera de los anteriores en segundo plano, desligado del terminal |
 | `stop.sh [pid]` | Para el último lanzado con `bg.sh` (o el indicado), con todos sus procesos |

@@ -197,6 +197,7 @@ def _grid_worker(task):
         generate_add_one_datasets,
         calculate_stability_metrics,
         calculate_jensen_shannon,
+        calculate_pcfg_entropy,
         StabilityEvaluationFunction,
     )
 
@@ -283,6 +284,12 @@ def _grid_worker(task):
         "nrmse_val":    float(metrics["nrmse_val_fSz"]),
         "nrmse_val_fS": float(metrics["nrmse_val_fS"]),
         "nrmse_train":  float(metrics["nrmse_train_fSz"]),
+        "nrmse_train_fS": float(metrics["nrmse_train_fS"]),
+        "apg_norm":     float(metrics["apg_norm"]),
+        "atg_norm":     float(metrics["atg_norm"]),
+        "entropy_S":    float(calculate_pcfg_entropy(pcfg_S, mask)),
+        "entropy_Sz":   float(calculate_pcfg_entropy(pcfg_Sz, mask)),
+        "m":            m,
         "phenotype_S":  best_S["phenotype"],
         "phenotype_Sz": best_Sz["phenotype"],
         "js_divergence": float(js_div),

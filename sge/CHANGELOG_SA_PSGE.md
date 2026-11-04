@@ -97,8 +97,24 @@
   La mayoría de configuraciones empeora mucho la NRMSE-val de Nguyen-1 (sobre-regularización en el problema fácil).
 - Lanzadores: `N_DATA_SEEDS` permite ampliar a 20 semillas de datos reutilizando las 10 ya hechas.
 
+## 2026-11-04 (tarde): fase B con 20 semillas y piloto de RQ1
+- Fase B ampliada a 20 semillas de datos (commit `6bf7313`): la regla elige **λ = 0,25, β = 2** (única con
+  ΔNRMSE-val <= +2 % en ambos problemas). ΔAPG+ATG frente a PSGE: nguyen5 −0,068 [−0,19; +0,34], 12/20;
+  nguyen1 +0,002 [−0,015; +0,010], 10/20. La elección cambió tres veces (10 semillas/media, 10/mediana,
+  20/mediana): con este diseño la fase B no distingue configuraciones y SA-PSGE no mejora la estabilidad de PSGE.
+  Fase C con λ = 0,25, β = 2 en marcha en el servidor.
+- `examples/stats_utils.py` (sin scipy): IC BCa, Wilcoxon exacto con empates, rank-biserial, Spearman con p por
+  permutación. 7 tests (Wilcoxon contrastado con enumeración completa).
+- Piloto de RQ1: `examples/run_rq1_pilot.py` (SGE lf = 0 frente a PSGE lf = 0,01 con el mismo worker emparejado;
+  semillas 500../5000.., 20 × 5, 200 × 50, solo validación), `examples/analyze_rq1.py` (estabilidad de datos
+  APG+ATG, APG, ATG; estabilidad de búsqueda = dispersión de las predicciones de f_S entre semillas;
+  NRMSE-val; Spearman JS vs APG+ATG en PSGE; entropía de la PCFG) y `server/run_rq1_pilot.sh`.
+- El worker emparejado guarda además `apg_norm`, `atg_norm`, `nrmse_train_fS`, `entropy_S`, `entropy_Sz` y `m`
+  (campos nuevos; los existentes no cambian).
+- `run_pilot_campaign.py` queda obsoleto para RQ1.
+
 ## Tests
-`python3 -m unittest tests.test_stability tests.test_sa_psge tests.test_invalid_rule` → 18 tests OK.
+`python3 -m unittest tests.test_stability tests.test_sa_psge tests.test_invalid_rule tests.test_stats_utils` → 25 tests OK.
 
 ## Pendiente (no hecho)
 - Paso 5 (congelación): decidir si se congela eta = 0,08 / alpha = 0,01 o se amplía (eta = 0,16; lambda, beta, K, tau
