@@ -54,6 +54,9 @@ Todos los lanzadores:
   `standard.yml`, tiempo de reloj, logs y `errors.txt`;
 - fijan un hilo BLAS por proceso.
 
+Con `N_DATA_SEEDS=20 server/bg.sh run_phaseB.sh 16` se amplía a 20 semillas de datos (400–419); las 10
+primeras ya hechas se reutilizan.
+
 Relanzar una campaña interrumpida reutiliza las ejecuciones ya hechas: basta con lanzar el mismo script otra vez.
 
 ## Estructura de resultados

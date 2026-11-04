@@ -3,8 +3,10 @@
 Paired analysis of SA-PSGE grid results against the PSGE baseline.
 
 For every config found under <grid_root>/<problem>/, and for each data seed:
-  1. mean over evo seeds (seeds are NOT independent datasets);
+  1. median over evo seeds (seeds are NOT independent datasets);
   2. paired difference vs psge_baseline on the same data seed.
+Invalid runs (non-evaluable models) follow examples/invalid_rule.py: they count as +inf,
+are never dropped, and are reported per config.
 Reports per problem the median paired Δ(APG+ATG) with a percentile-bootstrap
 95 % CI of the median, the number of data seeds where SA-PSGE beats PSGE, and
 the median relative Δ NRMSE-val (%). Only validation results are used.
@@ -19,6 +21,8 @@ import json
 import argparse
 import collections
 import numpy as np
+
+from examples.invalid_rule import agg_evo, paired_diff, rel_diff_pct, count_invalid
 
 
 def load_results(problem_dir, data_seeds, evo_seeds):
@@ -44,12 +48,16 @@ def paired_rows(res, n_evo, n_boot, rng):
                        if len(per_seed[s]) == n_evo and len(base.get(s, [])) == n_evo)
         if len(seeds) < 2:
             continue
-        stab = np.array([np.mean([x[0] for x in per_seed[s]]) - np.mean([x[0] for x in base[s]])
-                         for s in seeds])
-        val_sa = np.array([np.mean([x[1] for x in per_seed[s]]) for s in seeds])
-        val_b = np.array([np.mean([x[1] for x in base[s]]) for s in seeds])
-        ok = val_b > 1e-9
-        dval = (val_sa[ok] / val_b[ok] - 1.0) * 100.0
+        stab = np.array([paired_diff(agg_evo([x[0] for x in per_seed[s]]),
+                                     agg_evo([x[0] for x in base[s]])) for s in seeds])
+        dval = [rel_diff_pct(agg_evo([x[1] for x in per_seed[s]]),
+                             agg_evo([x[1] for x in base[s]])) for s in seeds]
+        dval = np.array([d for d in dval if d is not None])
+        runs = [x for s in seeds for x in per_seed[s]]
+        runs_b = [x for s in seeds for x in base[s]]
+        inv = count_invalid([x[0] for x in runs] + [x[1] for x in runs])
+        inv_runs = sum(1 for x in runs if count_invalid(x))
+        inv_runs_b = sum(1 for x in runs_b if count_invalid(x))
         boot = [np.median(rng.choice(stab, len(stab))) for _ in range(n_boot)]
         rows.append({
             "config": cfg, "n": len(seeds),
@@ -58,6 +66,7 @@ def paired_rows(res, n_evo, n_boot, rng):
             "stab_wins": int((stab < 0).sum()),
             "d_val_pct_median": float(np.median(dval)) if len(dval) else 0.0,
             "val_wins": int((dval < 0).sum()),
+            "invalid_runs": inv_runs, "invalid_runs_baseline": inv_runs_b, "n_runs": len(runs),
         })
     return sorted(rows, key=lambda r: r["d_stab_median"])
 
@@ -80,7 +89,8 @@ def main():
     out = {}
     ranks = collections.defaultdict(dict)
     print(f"Paired diffs vs PSGE, {args.n_data_seeds} data seeds x {args.n_evo_seeds} evo seeds "
-          f"(mean over evo seeds first). Δ = median(SA - PSGE); CI = bootstrap 95 % of median.")
+          f"(median over evo seeds first; invalid runs = +inf, see examples/invalid_rule.py). "
+          f"Δ = median(SA - PSGE); CI = bootstrap 95 % of median.")
     for prob in args.problems:
         res = load_results(os.path.join(args.grid_root, prob), data_seeds, evo_seeds)
         rows = paired_rows(res, args.n_evo_seeds, args.n_boot, rng)
@@ -91,7 +101,8 @@ def main():
             lo, hi = r["d_stab_ci95"]
             print(f"{r['config']:44s} n={r['n']:>2}  Δstab={r['d_stab_median']:+.4f} "
                   f"CI[{lo:+.3f},{hi:+.3f}]  wins={r['stab_wins']}/{r['n']}  "
-                  f"Δval%={r['d_val_pct_median']:+6.1f}  val-wins={r['val_wins']}/{r['n']}")
+                  f"Δval%={r['d_val_pct_median']:+6.1f}  val-wins={r['val_wins']}/{r['n']}  "
+                  f"inv={r['invalid_runs']}/{r['n_runs']} (PSGE {r['invalid_runs_baseline']})")
 
     common = [c for c, rk in ranks.items() if len(rk) == len(args.problems)]
     print("\nMean stability rank across problems (configs present in all):")

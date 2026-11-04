@@ -36,6 +36,7 @@ import copy
 import argparse
 import itertools
 import numpy as np
+from examples.invalid_rule import agg_evo, count_invalid
 from concurrent.futures import ProcessPoolExecutor, as_completed
 
 sys.path.insert(0, os.path.abspath(os.path.dirname(os.path.dirname(__file__))))
@@ -369,8 +370,10 @@ def analyze_grid_results(all_results, output_dir):
     H2a: APG+ATG median < PSGE baseline median  (SA-PSGE is more stable)
     H2b: NRMSE-validation median <= 1.02 * PSGE baseline median  (cost <= 2%)
 
-    Aggregation: for each config, metrics are first averaged over evo seeds
-    within each data seed; medians/IQRs are then taken across data seeds.
+    Aggregation: for each config, metrics are first aggregated over evo seeds
+    within each data seed with the MEDIAN; medians/IQRs are then taken across
+    data seeds. Invalid runs follow examples/invalid_rule.py (+inf, never dropped,
+    counted in "invalid_runs").
     "n" is the number of data seeds (independent replicas).
     The column labelled NRMSE-val in older outputs is now NRMSE-val.
     """
@@ -384,7 +387,9 @@ def analyze_grid_results(all_results, output_dir):
         by_sd = defaultdict(list)
         for r in recs:
             by_sd[r["seed_data"]].append(r[key])
-        return np.array([np.mean(v) for _, v in sorted(by_sd.items())])
+        if key == "js_divergence":
+            return np.array([np.median(v) for _, v in sorted(by_sd.items())])
+        return np.array([agg_evo(v) for _, v in sorted(by_sd.items())])
 
     summary = []
     for name, recs in groups.items():
@@ -406,6 +411,8 @@ def analyze_grid_results(all_results, output_dir):
             "med_nrmse_val": float(np.median(val)),
             "iqr_nrmse_val": float(np.percentile(val, 75) - np.percentile(val, 25)),
             "med_js":         float(np.median(js)),
+            "invalid_runs":   sum(1 for r in recs
+                                  if count_invalid([r["apg_plus_atg"], r["nrmse_val"]])),
         })
 
     # Locate PSGE baseline
@@ -442,7 +449,7 @@ def analyze_grid_results(all_results, output_dir):
     print(f"{'psge_baseline':<{COL}} {'—':>5} {'—':>6} {baseline['n']:>3}"
           f"  {b_stab:>9.4f} {'(ref)':>8}"
           f"  {b_val:>9.4f} {'(ref)':>8}"
-          f"  {'ref':>3} {'ref':>3}")
+          f"  {'ref':>3} {'ref':>3}  inv={baseline['invalid_runs']}/{baseline['n_runs']}")
     print("-" * 90)
 
     best_h2ab = None
@@ -460,7 +467,7 @@ def analyze_grid_results(all_results, output_dir):
         print(f"{s['config_name']:<{COL}} {s['sa_eta']:>5.3f} {s['sa_alpha']:>6.3f} {s['n']:>3}"
               f"  {s['med_apg_atg']:>9.4f} {delta_stab:>+8.4f}"
               f"  {s['med_nrmse_val']:>9.4f} {delta_val_pct:>+7.1f}%"
-              f"  {h2a_str:>3} {h2b_str:>3}")
+              f"  {h2a_str:>3} {h2b_str:>3}  inv={s['invalid_runs']}/{s['n_runs']}")
 
         if h2a and h2b and best_h2ab is None:
             best_h2ab = s

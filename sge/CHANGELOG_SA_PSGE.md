@@ -78,8 +78,27 @@
      añade `_k<K>_tau<tau>` al nombre de configuración cuando K ≠ 3 o tau ≠ 1, para que la caché no confunda
      ejecuciones con distinto K/tau.
 
+## 2026-11-04: fase B en el servidor y regla de ejecuciones inválidas
+- Fase B completa en el servidor (commit `0268719`, profundidad 12/12, 13 configs × 30 ejecuciones × 2 problemas,
+  535 s, sin errores). Resultados en `~/psge-results/hyperparam_search` (fuera del repositorio).
+- Divergencias investigadas en Nguyen-1: (a) una ejecución (lam1_bet2, d402 e4002) con un modelo no evaluable en un
+  punto de validación (1/x dentro de exp, x = 0,00092): `calculate_dataset_nrmse` devuelve el centinela 9 999 999,
+  que el análisis promediaba como un error; (b) la semilla de datos 403 tiene el entrenamiento en [-0,90; 0,55] y
+  99/500 puntos de validación fuera: modelos con polo en x = 1 (`x/(1-x)`) dan NRMSE-val 23,8. No es específico de
+  SA-PSGE: la división y `_inv_` solo se protegen en 0 exacto. Operadores sin polos: no se cambian (decisión
+  pendiente, cambiaría la representación de todos los algoritmos).
+- **Regla de inválidos** (`examples/invalid_rule.py`, tests en `tests/test_invalid_rule.py`): valor no finito o
+  >= 1e5 = inválido; se cuenta como +inf, nunca se descarta; semillas evolutivas agregadas con la **mediana**;
+  tasa de inválidos por configuración en la salida. Aplicada en `analyze_grid_paired.py` y en la tabla de decisión
+  de `run_hyperparameter_search.py` (solo análisis: las ejecuciones no cambian).
+- Efecto en la fase B: con la media, la única configuración con ΔNRMSE-val <= +2 % en ambos problemas era
+  λ = 1, β = 2; con la mediana es **λ = 0,25, β = 0,5**. En ambos casos ΔAPG+ATG ≈ 0 con IC que incluye 0.
+  La selección depende de la agregación: con 10 semillas de datos la fase B no discrimina entre configuraciones.
+  La mayoría de configuraciones empeora mucho la NRMSE-val de Nguyen-1 (sobre-regularización en el problema fácil).
+- Lanzadores: `N_DATA_SEEDS` permite ampliar a 20 semillas de datos reutilizando las 10 ya hechas.
+
 ## Tests
-`python3 -m unittest tests.test_stability tests.test_sa_psge` → 12 tests OK.
+`python3 -m unittest tests.test_stability tests.test_sa_psge tests.test_invalid_rule` → 18 tests OK.
 
 ## Pendiente (no hecho)
 - Paso 5 (congelación): decidir si se congela eta = 0,08 / alpha = 0,01 o se amplía (eta = 0,16; lambda, beta, K, tau
