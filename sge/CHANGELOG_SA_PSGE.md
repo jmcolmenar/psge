@@ -182,6 +182,15 @@
   m = 20 y 74–103 s con m = 100. SA-PSGE evalúa 23 % más casos (1,29 M frente a 1,05 M con m = 20). Estimación
   del estudio: ~433 h de CPU, ~13,5 h de reloj con 32 procesos.
 
+- Almacenamiento en el servidor (2026-11-05): `RESULTS_ROOT` guarda lo ligero (JSON de cada ejecución, `meta/`,
+  informes; ~50 MB en la confirmación) y `RUNS_ROOT` lo pesado (brazos con la gramática por generación; ~50 GB,
+  ~2,2 MB por brazo a 500 × 100). `run_confirmation.py --runs_dir`; `run_confirmation.sh` usa
+  `$RUNS_ROOT/confirmation` y exige `MIN_FREE_GB` (60) libres. En el servidor, `RUNS_ROOT=/tmp/psge-runs`.
+- El análisis se hace en el servidor (`run_confirmation.sh` al terminar; `server/run_analysis.sh` para repetirlo);
+  el portátil solo necesita `fetch_results.sh --reports` (solo `meta/`).
+- Tags: `gecco-confirmation-v1` (análisis B) y `-v2` (análisis C) nunca se lanzaron; la confirmación se lanza con
+  `gecco-confirmation-v3` (análisis C + almacenamiento separado). Las ejecuciones son idénticas en los tres.
+
 ## Tests
 `python3 -m unittest tests.test_stability tests.test_sa_psge tests.test_invalid_rule tests.test_stats_utils tests.test_benchmarks tests.test_analyze_confirmation` → 37 tests OK.
 

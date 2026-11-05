@@ -7,13 +7,15 @@ cd "$SGE_DIR"
 
 # Configuración local de cada máquina (no versionada). Ver server/local.env.example.
 # Las variables puestas al lanzar (RESULTS_ROOT=... server/x.sh) tienen prioridad sobre local.env.
-_env_RESULTS_ROOT="${RESULTS_ROOT:-}"; _env_CONDA_ENV="${CONDA_ENV:-}"; _env_N_JOBS="${N_JOBS:-}"; _env_PYTHON="${PYTHON:-}"
+_env_RESULTS_ROOT="${RESULTS_ROOT:-}"; _env_RUNS_ROOT="${RUNS_ROOT:-}"; _env_CONDA_ENV="${CONDA_ENV:-}"; _env_N_JOBS="${N_JOBS:-}"; _env_PYTHON="${PYTHON:-}"
 if [ -f "$SGE_DIR/server/local.env" ]; then source "$SGE_DIR/server/local.env"; fi
 [ -n "$_env_RESULTS_ROOT" ] && RESULTS_ROOT="$_env_RESULTS_ROOT"
+[ -n "$_env_RUNS_ROOT" ] && RUNS_ROOT="$_env_RUNS_ROOT"
 [ -n "$_env_CONDA_ENV" ] && CONDA_ENV="$_env_CONDA_ENV"
 [ -n "$_env_N_JOBS" ] && N_JOBS="$_env_N_JOBS"
 [ -n "$_env_PYTHON" ] && PYTHON="$_env_PYTHON"
-: "${RESULTS_ROOT:=$HOME/psge-results}"   # fuera del repositorio y fuera de OneDrive
+: "${RESULTS_ROOT:=$HOME/psge-results}"   # resultados ligeros: JSON de resumen, metadatos, informes
+: "${RUNS_ROOT:=$RESULTS_ROOT/runs}"        # datos pesados de cada brazo (puede estar en otro disco, p. ej. /tmp)
 : "${CONDA_ENV:=psge-original}"
 NCPU="$(getconf _NPROCESSORS_ONLN 2>/dev/null || echo 4)"
 : "${N_JOBS:=$(( NCPU / 2 > 0 ? NCPU / 2 : 1 ))}"   # procesos por problema (dos problemas en paralelo)
@@ -64,6 +66,18 @@ guard_commit() {
   fi
 }
 
+# Se niega a lanzar si en el disco de $1 quedan menos de $2 GB libres (ALLOW_LOW_DISK=1 para forzar).
+require_free_gb() {
+  local dir="$1" need="$2" free
+  mkdir -p "$dir"
+  free=$(df -Pk "$dir" | awk 'NR==2 {print int($4 / 1024 / 1024)}')
+  if [ "$free" -lt "$need" ] && [ "${ALLOW_LOW_DISK:-0}" != "1" ]; then
+    echo "ERROR: en $dir quedan $free GB libres y hacen falta unos $need GB. Para forzar: ALLOW_LOW_DISK=1." >&2
+    exit 1
+  fi
+  echo "Espacio libre en $dir: $free GB (se necesitan ~$need GB)"
+}
+
 # Crea $META_DIR con todo lo necesario para reproducir la ejecución.
 start_campaign() {
   local name="$1"; shift
@@ -78,6 +92,8 @@ start_campaign() {
     echo "describe:   $(git describe --tags --always --dirty)"
     echo "branch:     $(git rev-parse --abbrev-ref HEAD)"
     echo "n_jobs:     $N_JOBS (por problema), cpus: $NCPU"
+    echo "results:    $RESULTS_ROOT"
+    echo "runs:       $RUNS_ROOT"
     echo "python:     $($PYTHON -V 2>&1)"
   } > "$META_DIR/run_info.txt"
   git diff HEAD > "$META_DIR/git_diff.patch" || true

@@ -1,8 +1,10 @@
 #!/usr/bin/env bash
 # SE EJECUTA EN EL PORTÁTIL. Trae los resultados del servidor a un directorio fuera de OneDrive.
-# Uso: server/fetch_results.sh [--full]
-#   por defecto: JSON por ejecución, resúmenes, logs y metadatos (pocos MB)
-#   --full:      además los directorios de cada ejecución (gramática por generación, progress_report)
+# Uso: server/fetch_results.sh [--reports | --full]
+#   por defecto: JSON por ejecución, resúmenes, logs y metadatos (decenas de MB)
+#   --reports:   solo meta/ (informes de análisis, logs y metadatos de cada campaña): lo mínimo
+#   --full:      además los directorios de cada ejecución que estén bajo RESULTS_ROOT (los de RUNS_ROOT,
+#                p. ej. /tmp, nunca se traen)
 set -euo pipefail
 HERE="$(cd "$(dirname "$0")" && pwd)"
 _env_RESULTS_ROOT="${RESULTS_ROOT:-}"
@@ -18,7 +20,9 @@ esac
 mkdir -p "$LOCAL_RESULTS"
 
 filters=()
-if [ "${1:-}" != "--full" ]; then
+if [ "${1:-}" = "--reports" ]; then
+  filters=(--include='meta/' --include='meta/**' --exclude='*')
+elif [ "${1:-}" != "--full" ]; then
   # Los directorios de cada ejecución se llaman <config>_d<datos>_e<evo>/: se dejan en el servidor.
   filters=(--exclude='*_d[0-9]*_e[0-9]*/' --exclude='*_sData*_sEvo*/')
 fi

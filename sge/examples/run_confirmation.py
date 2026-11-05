@@ -10,10 +10,11 @@ Diseño (plan; configuración en parameters/gecco_frozen.yml, que se pasa tal cu
   - Réplicas: N_DATA semillas de datos (1000..) x N_EVO semillas evolutivas emparejadas (10000..),
     distintas de todas las de los pilotos. La misma semilla evolutiva en los dos brazos (S, S+z).
 
-Cada ejecución emparejada guarda un JSON con: APG, ATG, APG+ATG; NRMSE de entrenamiento y TEST de f_S y
+Cada ejecución emparejada guarda un JSON (en --output_dir) con: APG, ATG, APG+ATG; NRMSE de entrenamiento y TEST de f_S y
 f_{S+z}; JS entre las gramáticas finales y entropía; KL por actualización (mediana, máximo, nº); fenotipos;
 y coste por brazo (evaluaciones, evaluaciones caso-individuo, tiempo de reloj y CPU, memoria pico).
-Los directorios de cada brazo guardan la gramática de cada generación.
+Los directorios de cada brazo (en --runs_dir, que puede estar en otro disco) guardan la gramática de cada
+generación.
 
 Uso (desde sge/):
   python -m examples.run_confirmation --output_dir ~/psge-results/confirmation --n_jobs 32
@@ -144,9 +145,10 @@ def build_tasks(a):
         sd, se = DATA_SEED_BASE + i, EVO_SEED_BASE + j
         regime = f"m{m}_noise{noise:g}"
         base = os.path.join(a.output_dir, bench, regime, alg)
+        runs_base = os.path.join(a.runs_dir or a.output_dir, bench, regime, alg)
         tasks.append({"benchmark": bench, "m": m, "noise": noise, "alg": alg, "seed_data": sd, "seed_evo": se,
                       "grammar": BENCHMARK_SPECS[bench]["grammar"], "parameters_file": a.parameters,
-                      "run_dir": os.path.join(base, f"{alg}_d{sd}_e{se}"),
+                      "run_dir": os.path.join(runs_base, f"{alg}_d{sd}_e{se}"),
                       "json_path": os.path.join(base, f"{alg}_d{sd}_e{se}.json")})
     return tasks
 
@@ -161,6 +163,9 @@ def main():
     p.add_argument("--n_evo_seeds", type=int, default=5)
     p.add_argument("--parameters", default="parameters/gecco_frozen.yml")
     p.add_argument("--output_dir", default="dumps/confirmation")
+    p.add_argument("--runs_dir", default=None,
+                   help="directorio para los brazos (gramática por generación, ~2 MB por brazo); "
+                        "por defecto, el mismo que --output_dir. Los JSON de resumen van siempre a --output_dir")
     p.add_argument("--n_jobs", type=int, default=4)
     p.add_argument("--dry_run", action="store_true", help="solo contar tareas y estimar coste")
     p.add_argument("--sec_per_arm", type=float, default=None, help="segundos por brazo para la estimación")

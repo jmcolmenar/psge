@@ -4,13 +4,14 @@
 # Uso: server/run_confirmation.sh [procesos]
 source "$(dirname "$0")/common.sh"
 N_JOBS="${1:-$NCPU}"
-OUT="$RESULTS_ROOT/confirmation"
+OUT="$RESULTS_ROOT/confirmation"            # JSON de resumen (~50 MB)
+RUNS="$RUNS_ROOT/confirmation"              # brazos con la gramática por generación (~50 GB)
 
-activate_env; require_clean_tree; guard_commit "$OUT"
+activate_env; require_clean_tree; guard_commit "$OUT"; require_free_gb "$RUNS" "${MIN_FREE_GB:-60}"
 start_campaign confirmation "$@"
 cp parameters/gecco_frozen.yml "$META_DIR/gecco_frozen.yml"
 rc=0
-$PYTHON -m examples.run_confirmation --output_dir "$OUT" --n_jobs "$N_JOBS" \
+$PYTHON -m examples.run_confirmation --output_dir "$OUT" --runs_dir "$RUNS" --n_jobs "$N_JOBS" \
   > "$META_DIR/confirmation.log" 2>&1 || rc=$?
 # Análisis fijado de antemano (opción C: principal = benchmark unilateral; robustez = celdas bilateral)
 $PYTHON -m examples.analyze_confirmation --root "$OUT" --global_unit benchmark --alternative less \

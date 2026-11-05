@@ -43,11 +43,12 @@ segundos y muestra el error. Los scripts también se pueden lanzar sin `bg.sh`, 
 | `run_recalibration.sh [J]` | KL de PSGE (→ δ de PSGE-KL) y de SA-PSGE a 500 × 100 en los pilotos; tiempos para el coste |
 | `run_timing.sh [J]` | Coste real de la confirmación medido en nguyen5 con la configuración congelada |
 | `run_confirmation.sh [J]` | Estudio confirmatorio completo (abre el test); exige KL_DELTA numérico |
+| `run_analysis.sh` | Repite en el servidor el análisis confirmatorio (opción C); informe en `meta/analysis_*/` |
 | `launch.sh NOMBRE cmd…` | Cualquier otro experimento con las mismas comprobaciones y metadatos |
 | `bg.sh SCRIPT args…` | Lanza cualquiera de los anteriores en segundo plano, desligado del terminal |
 | `stop.sh [pid]` | Para el último lanzado con `bg.sh` (o el indicado), con todos sus procesos |
 | `status.sh [n]` | Procesos vivos, ejecuciones completadas por configuración (sobre n esperadas), errores |
-| `fetch_results.sh [--full]` | **En el portátil.** rsync del servidor a `LOCAL_RESULTS` |
+| `fetch_results.sh [--reports\|--full]` | **En el portátil.** rsync del servidor a `LOCAL_RESULTS`; `--reports` trae solo `meta/` |
 
 Todos los lanzadores:
 - **se niegan a ejecutar con cambios sin commit** en ficheros versionados (`ALLOW_DIRTY=1` para forzar);
@@ -62,6 +63,17 @@ Con `N_DATA_SEEDS=20 server/bg.sh run_phaseB.sh 16` se amplía a 20 semillas de 
 primeras ya hechas se reutilizan.
 
 Relanzar una campaña interrumpida reutiliza las ejecuciones ya hechas: basta con lanzar el mismo script otra vez.
+
+## Dos ubicaciones en el servidor
+
+- `RESULTS_ROOT` (por defecto `~/psge-results`): resultados ligeros, es decir, el JSON de cada ejecución, `meta/` y los
+  informes. Es lo que se analiza y lo que se trae al portátil.
+- `RUNS_ROOT` (por defecto `RESULTS_ROOT/runs`): datos pesados de cada brazo (gramática por generación). En la
+  confirmación son ~50 GB; puede estar en otro disco, p. ej. `RUNS_ROOT="/tmp/psge-runs"` en `server/local.env`.
+  `run_confirmation.sh` comprueba antes que haya al menos `MIN_FREE_GB` (60) libres ahí.
+
+El análisis se hace en el servidor (`run_confirmation.sh` lo lanza al terminar; `run_analysis.sh` lo repite) y el
+portátil solo necesita `fetch_results.sh --reports`.
 
 ## Estructura de resultados
 
