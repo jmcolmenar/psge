@@ -20,9 +20,12 @@ Reglas previas
   Clasificación de cada celda: "éxito" (mejora relevante y no inferior), "trade-off" (mejora pero no
   no-inferior: sobre-regularización), "peor" (IC95 de estabilidad por encima de 0), "nulo" (resto).
 - Nivel global: puntuación por bloque = media sobre las celdas del bloque de log(mediana de la celda).
-  DECISIÓN FIJADA (2026-11-05): bloque = celda (24 bloques), pruebas bilaterales. El plan decía bloque =
-  benchmark, pero con 6 bloques ninguna comparación global podía ser significativa bajo Holm.
-  --global_unit benchmark queda como análisis descriptivo adicional.
+  DECISIÓN FIJADA (2026-11-05, opción C), antes de lanzar la confirmación:
+    PRINCIPAL: bloque = benchmark (6), unilateral en la dirección del plan (SA-PSGE reduce APG+ATG; en RQ1,
+      PSGE la aumenta). Con 6 bloques solo es significativo si los 6 van en esa dirección (p = 1/64).
+    ROBUSTEZ: bloque = celda (24), bilateral.
+  El plan decía bloque = benchmark bilateral, pero así ninguna comparación global podía ser significativa
+  bajo Holm (p mínimo 2/64 > 0,025).
   Friedman/Iman-Davenport entre psge, psge_kl, sa_psge y sa_psge_lam0. Comparaciones planificadas
   (Wilcoxon exacto sobre los bloques, log-ratio tratamiento/control): primarias SA-PSGE vs PSGE y
   SA-PSGE vs PSGE-KL con Holm; secundaria SA-PSGE vs SA-PSGE(λ = 0). --alternative solo afecta a la
@@ -148,9 +151,10 @@ def logscore(x):
 def main():
     p = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter)
     p.add_argument("--root", default="dumps/confirmation")
-    # Decisión del investigador (2026-11-05, antes de lanzar): opción B = bloques = celdas, bilateral.
-    p.add_argument("--global_unit", choices=["benchmark", "cell"], default="cell")
-    p.add_argument("--alternative", choices=["two-sided", "less"], default="two-sided",
+    # Decisión del investigador (2026-11-05, antes de lanzar): opción C. Principal = benchmark, unilateral
+    # (estas dos opciones); robustez = celdas, bilateral (fija, siempre se calcula).
+    p.add_argument("--global_unit", choices=["benchmark", "cell"], default="benchmark")
+    p.add_argument("--alternative", choices=["two-sided", "less"], default="less",
                    help="less = H1 pre-registrada de que el tratamiento REDUCE la métrica")
     p.add_argument("--n_boot", type=int, default=10000)
     p.add_argument("--seed", type=int, default=0)
@@ -166,7 +170,7 @@ def main():
     cell_rows, pareto_rows, cost_rows = [], [], []
 
     print(f"Análisis confirmatorio: {len(cells)} celdas en {a.root}")
-    print(f"Unidad global: {a.global_unit}; alternativa: {a.alternative}\n")
+    print(f"Nivel global principal: bloques = {a.global_unit}, {a.alternative}; robustez: celdas, bilateral\n")
     print("== Integridad")
     for key in sorted(cells):
         cell = cells[key]
@@ -244,56 +248,73 @@ def main():
         print_cells(f"{t}_vs_{c}", f"RQ2: {t} frente a {c} (negativo = {t} más estable)")
 
     # ---------------- nivel global
-    def blocks_scores(alg, metric):
-        groups = collections.defaultdict(list)
-        for k, res in report["cells"].items():
-            if alg in res["medians"]:
-                bench, regime = k.split("/")
-                groups[bench if a.global_unit == "benchmark" else k].append(logscore(res["medians"][alg][metric]))
-        return {b: (math.inf if any(math.isinf(x) for x in xs) else float(np.mean(xs))) for b, xs in groups.items()}
+    def global_level(unit, alternative, title):
+        def blocks_scores(alg, metric):
+            groups = collections.defaultdict(list)
+            for k, res in report["cells"].items():
+                if alg in res["medians"]:
+                    bench = k.split("/")[0]
+                    groups[bench if unit == "benchmark" else k].append(logscore(res["medians"][alg][metric]))
+            return {b: (math.inf if any(math.isinf(x) for x in xs) else float(np.mean(xs))) for b, xs in groups.items()}
 
-    glob_res = {}
-    print(f"\n== Nivel global (bloques = {a.global_unit}; puntuación = media de log(mediana de celda))")
-    for metric, label in (("stab", "APG+ATG"), ("nrmse", "NRMSE-test")):
-        sc = {x: blocks_scores(x, metric) for x in ALGS}
-        common = sorted(set.intersection(*[set(sc[x]) for x in RQ2_ALGS])) if all(sc[x] for x in RQ2_ALGS) else []
-        g = {"blocks": common}
-        if len(common) >= 2:
-            fr = friedman_iman_davenport([[sc[x][b] for x in RQ2_ALGS] for b in common])
-            g["friedman"] = {**fr, "algorithms": RQ2_ALGS}
-            print(f"   {label}: Friedman/Iman-Davenport F = {fr['F_iman_davenport']:.3f} (df {fr['df']}), "
-                  f"p = {fr['p']:.4f}; rangos medios " +
-                  ", ".join(f"{x} {r:.2f}" for x, r in zip(RQ2_ALGS, fr["mean_ranks"])))
-        fam = []
-        for t, c in [RQ1] + RQ2_PRIMARY + RQ2_SECONDARY:
-            blocks = sorted(set(sc[t]) & set(sc[c]))
-            if len(blocks) < 2:
-                continue
-            lr = np.array([paired_diff(sc[t][b], sc[c][b]) for b in blocks])
-            if metric != "stab":
-                alt = "two-sided"   # en precisión no hay hipótesis de dirección: la no inferioridad va por celda
+        glob_res = {"unit": unit, "alternative_stability": alternative}
+        print(f"\n== {title}: bloques = {unit}; estabilidad {alternative}, NRMSE bilateral "
+              f"(puntuación = media de log(mediana de celda))")
+        for metric, label in (("stab", "APG+ATG"), ("nrmse", "NRMSE-test")):
+            sc = {x: blocks_scores(x, metric) for x in ALGS}
+            common = sorted(set.intersection(*[set(sc[x]) for x in RQ2_ALGS])) if all(sc[x] for x in RQ2_ALGS) else []
+            g = {"blocks": common}
+            if len(common) >= 2:
+                fr = friedman_iman_davenport([[sc[x][b] for x in RQ2_ALGS] for b in common])
+                g["friedman"] = {**fr, "algorithms": RQ2_ALGS}
+                print(f"   {label}: Friedman/Iman-Davenport F = {fr['F_iman_davenport']:.3f} (df {fr['df']}), "
+                      f"p = {fr['p']:.4f}; rangos medios " +
+                      ", ".join(f"{x} {r:.2f}" for x, r in zip(RQ2_ALGS, fr["mean_ranks"])))
+            fam = []
+            for t, c in [RQ1] + RQ2_PRIMARY + RQ2_SECONDARY:
+                blocks = sorted(set(sc[t]) & set(sc[c]))
+                if len(blocks) < 2:
+                    continue
+                lr = np.array([paired_diff(sc[t][b], sc[c][b]) for b in blocks])
+                if metric != "stab":
+                    alt = "two-sided"   # en precisión no hay hipótesis de dirección: la no inferioridad va por celda
+                elif (t, c) == RQ1:
+                    alt = "greater" if alternative == "less" else "two-sided"   # H1 de RQ1: PSGE aumenta APG+ATG
+                else:
+                    alt = alternative                                          # H1 de RQ2: SA-PSGE la reduce
+                pval = wilcoxon_exact(lr, alt)[1]
+                fam.append({"comparison": f"{t}_vs_{c}", "n_blocks": len(blocks),
+                            "median_log_ratio": float(np.median(lr)),
+                            "geo_mean_ratio": float(math.exp(np.mean(lr))) if np.all(np.isfinite(lr)) else math.nan,
+                            "treat_better_blocks": int((lr < 0).sum()), "p": pval, "alternative": alt,
+                            "rank_biserial": rank_biserial(lr)})
+            prim = [f for f in fam if f["comparison"] in [f"{t}_vs_{c}" for t, c in RQ2_PRIMARY]]
+            for f, adj in zip(prim, holm([f["p"] for f in prim]) if prim else []):
+                f["p_holm"] = adj
+            g["comparisons"] = fam
+            glob_res[metric] = g
+            for f in fam:
+                extra = f"  p Holm = {f['p_holm']:.4f}" if "p_holm" in f else ""
+                print(f"   {label}: {f['comparison']:<26} razón geométrica = {f['geo_mean_ratio']:.3f}  "
+                      f"mejor en {f['treat_better_blocks']}/{f['n_blocks']} bloques  p ({f['alternative']}) = {f['p']:.4f}{extra}")
+        nb = len(glob_res["stab"]["blocks"]) if "stab" in glob_res else 0
+        if nb:
+            if alternative == "two-sided":
+                pmin = 2 / 2 ** nb
+                note = ("ninguna comparación global puede ser significativa" if pmin > 0.025
+                        else "la significación es alcanzable")
             else:
-                alt = a.alternative if (t, c) != RQ1 else ("greater" if a.alternative == "less" else "two-sided")
-            pval = wilcoxon_exact(lr, alt)[1]
-            fam.append({"comparison": f"{t}_vs_{c}", "n_blocks": len(blocks),
-                        "median_log_ratio": float(np.median(lr)),
-                        "geo_mean_ratio": float(math.exp(np.mean(lr))) if np.all(np.isfinite(lr)) else math.nan,
-                        "treat_better_blocks": int((lr < 0).sum()), "p": pval, "alternative": alt,
-                        "rank_biserial": rank_biserial(lr)})
-        prim = [f for f in fam if f["comparison"] in [f"{t}_vs_{c}" for t, c in RQ2_PRIMARY]]
-        for f, adj in zip(prim, holm([f["p"] for f in prim]) if prim else []):
-            f["p_holm"] = adj
-        g["comparisons"] = fam
-        glob_res[metric] = g
-        for f in fam:
-            extra = f"  p Holm = {f['p_holm']:.4f}" if "p_holm" in f else ""
-            print(f"   {label}: {f['comparison']:<26} razón geométrica = {f['geo_mean_ratio']:.3f}  "
-                  f"mejor en {f['treat_better_blocks']}/{f['n_blocks']} bloques  p ({f['alternative']}) = {f['p']:.4f}{extra}")
-    report["global"] = glob_res
-    nb = len(set(k.split('/')[0] for k in report["cells"]))
-    if a.global_unit == "benchmark" and nb <= 6 and a.alternative == "two-sided":
-        print(f"\n   AVISO: con {nb} bloques el p bilateral mínimo de Wilcoxon es {2 / 2 ** nb:.4f}; con Holm sobre "
-              f"2 comparaciones, el umbral de la menor es 0,025: ninguna comparación global puede ser significativa.")
+                pmin = 1 / 2 ** nb
+                note = (f"solo es significativo si los {nb} bloques van en la dirección hipotetizada"
+                        if pmin * 2 > 0.025 else "la significación es alcanzable sin unanimidad")
+            print(f"   NOTA: con {nb} bloques, el p mínimo de Wilcoxon ({alternative}) es {pmin:.4f}; "
+                  f"con Holm sobre 2 comparaciones: {note}.")
+        return glob_res
+
+    # Decisión fijada antes de lanzar (2026-11-05, opción C): principal = benchmark, unilateral;
+    # robustez = celdas, bilateral. Los dos se calculan siempre.
+    report["global"] = global_level(a.global_unit, a.alternative, "Nivel global PRINCIPAL")
+    report["global_robustness"] = global_level("cell", "two-sided", "Nivel global de ROBUSTEZ")
 
     # ---------------- mecanismo y coste
     rhos = [r["mechanism"]["psge"]["rho"] for r in report["cells"].values() if "psge" in r.get("mechanism", {})]

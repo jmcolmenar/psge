@@ -173,8 +173,11 @@
 - `tests/test_analyze_confirmation.py`: datos SIMULADOS con efectos conocidos; el análisis los recupera.
 - **Problema de potencia del plan**: con la unidad global = benchmark (6), Wilcoxon bilateral tiene p mínimo
   2/64 = 0,031 y Holm sobre 2 comparaciones exige ≤ 0,025: el nivel global nunca puede ser significativo.
-  **Decisión del investigador (antes de lanzar): opción B**, bloques = las 24 celdas (benchmark × régimen), pruebas
-  bilaterales. Desviación del plan, documentada: trata como bloques regímenes del mismo benchmark.
+  **Decisión del investigador (antes de lanzar): opción C** (sustituye a la opción B elegida antes el mismo día, sin
+  haber visto ningún resultado de la confirmación). PRINCIPAL: bloque = benchmark (6), prueba unilateral en la
+  dirección del plan (SA-PSGE reduce APG+ATG frente a PSGE y PSGE-KL; en RQ1, PSGE la aumenta frente a SGE); con 6
+  bloques solo es significativo si los 6 van en esa dirección (p = 1/64, Holm). ROBUSTEZ: bloque = celda (24),
+  bilateral. NRMSE global siempre bilateral; la no inferioridad en NRMSE se decide por celda.
 - Coste medido (`server/run_timing.sh`, nguyen5, 500 × 100, AMD EPYC 9655P, 32 hilos): por brazo 41–47 s con
   m = 20 y 74–103 s con m = 100. SA-PSGE evalúa 23 % más casos (1,29 M frente a 1,05 M con m = 20). Estimación
   del estudio: ~433 h de CPU, ~13,5 h de reloj con 32 procesos.

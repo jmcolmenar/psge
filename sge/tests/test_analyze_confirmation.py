@@ -64,12 +64,27 @@ class TestAnalyzeConfirmation(unittest.TestCase):
             self.assertLess(g["sa_psge_vs_psge"]["p_holm"], 0.05)
             self.assertAlmostEqual(g["sa_psge_vs_psge"]["geo_mean_ratio"], 0.7 / 1.3, delta=0.05)
             self.assertLess(rep["global"]["stab"]["friedman"]["p"], 0.05)
-            # Con la unidad del plan (benchmark, 3 bloques aquí) y prueba bilateral, el aviso de potencia aparece
+            # Configuración por defecto (opción C): principal = benchmark unilateral, robustez = celdas bilateral.
             cp2 = subprocess.run([sys.executable, "-m", "examples.analyze_confirmation", "--root", root,
-                                  "--global_unit", "benchmark", "--n_boot", "200", "--output", out + "_b"],
-                                 capture_output=True, text=True)
+                                  "--n_boot", "200", "--output", out + "_c"], capture_output=True, text=True)
             self.assertEqual(cp2.returncode, 0, cp2.stderr)
-            self.assertIn("AVISO", cp2.stdout)
+            rep2 = json.load(open(out + "_c.json"))
+            self.assertEqual(rep2["global"]["unit"], "benchmark")
+            self.assertEqual(rep2["global"]["alternative_stability"], "less")
+            self.assertEqual(rep2["global_robustness"]["unit"], "cell")
+            prim = {f["comparison"]: f for f in rep2["global"]["stab"]["comparisons"]}
+            rob = {f["comparison"]: f for f in rep2["global_robustness"]["stab"]["comparisons"]}
+            # 3 benchmarks simulados, todos a favor: p unilateral = 1/8; 6 celdas a favor: p bilateral = 2/64
+            self.assertAlmostEqual(prim["sa_psge_vs_psge"]["p"], 1 / 8)
+            self.assertEqual(prim["sa_psge_vs_psge"]["alternative"], "less")
+            self.assertEqual(prim["psge_vs_sge"]["alternative"], "greater")
+            self.assertAlmostEqual(prim["psge_vs_sge"]["p"], 1 / 8)
+            self.assertAlmostEqual(rob["sa_psge_vs_psge"]["p"], 2 / 64)
+            self.assertEqual(rob["sa_psge_vs_psge"]["alternative"], "two-sided")
+            nr = {f["comparison"]: f for f in rep2["global"]["nrmse"]["comparisons"]}
+            self.assertEqual(nr["sa_psge_vs_psge"]["alternative"], "two-sided")   # NRMSE siempre bilateral
+            self.assertIn("ROBUSTEZ", cp2.stdout)
+            self.assertIn("NOTA", cp2.stdout)
 
 if __name__ == "__main__":
     unittest.main()

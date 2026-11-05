@@ -12,8 +12,8 @@ cp parameters/gecco_frozen.yml "$META_DIR/gecco_frozen.yml"
 rc=0
 $PYTHON -m examples.run_confirmation --output_dir "$OUT" --n_jobs "$N_JOBS" \
   > "$META_DIR/confirmation.log" 2>&1 || rc=$?
-# Análisis fijado de antemano (opción B: bloques = celdas, bilateral)
-$PYTHON -m examples.analyze_confirmation --root "$OUT" --global_unit cell --alternative two-sided \
+# Análisis fijado de antemano (opción C: principal = benchmark unilateral; robustez = celdas bilateral)
+$PYTHON -m examples.analyze_confirmation --root "$OUT" --global_unit benchmark --alternative less \
   --output "$META_DIR/confirmation_analysis" > "$META_DIR/analysis.txt" 2>&1 || rc=1
 finish_campaign "$rc"
 echo "Análisis: $META_DIR/analysis.txt"
