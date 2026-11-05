@@ -162,8 +162,22 @@
   comparación que aísla la señal de estabilidad es SA-PSGE frente a la ablación λ = 0 (mismo η, α y presupuesto).
 - Tiempo por brazo a 500 × 100, m = 20: PSGE 39 s, SA-PSGE 38–48 s.
 
+## 2026-11-05: análisis confirmatorio fijado antes de lanzar
+- `examples/analyze_confirmation.py`: integridad (semillas completas, inválidos), RQ1 (PSGE vs SGE) y RQ2
+  (SA-PSGE vs PSGE y vs PSGE-KL, primarias con Holm; vs λ = 0, secundaria) por celda (benchmark × régimen) con
+  efecto relativo emparejado (mediana de log-ratios por semilla de datos), IC BCa, Wilcoxon exacto, rank-biserial;
+  clasificación por celda (éxito / trade-off / peor / nulo) con los umbrales del plan (mejora ≥ 5 % con IC95 < 0;
+  no inferioridad NRMSE-test con IC90 superior ≤ +2 %); nivel global con Friedman/Iman-Davenport y Wilcoxon sobre
+  bloques; Spearman JS vs APG+ATG; Pareto y coste en CSV.
+- `stats_utils.py`: Wilcoxon unilateral, Holm, F de Snedecor (beta incompleta) y Friedman/Iman-Davenport.
+- `tests/test_analyze_confirmation.py`: datos SIMULADOS con efectos conocidos; el análisis los recupera.
+- **Problema de potencia del plan**: con la unidad global = benchmark (6), Wilcoxon bilateral tiene p mínimo
+  2/64 = 0,031 y Holm sobre 2 comparaciones exige ≤ 0,025: el nivel global nunca puede ser significativo.
+  Opciones en el script: `--global_unit cell` (24 bloques) y/o `--alternative less`. DECISIÓN PENDIENTE del
+  investigador, que debe fijarse antes de lanzar la confirmación.
+
 ## Tests
-`python3 -m unittest tests.test_stability tests.test_sa_psge tests.test_invalid_rule tests.test_stats_utils tests.test_benchmarks` → 32 tests OK.
+`python3 -m unittest tests.test_stability tests.test_sa_psge tests.test_invalid_rule tests.test_stats_utils tests.test_benchmarks tests.test_analyze_confirmation` → 37 tests OK.
 
 ## Pendiente (no hecho)
 - Paso 5 (congelación): decidir si se congela eta = 0,08 / alpha = 0,01 o se amplía (eta = 0,16; lambda, beta, K, tau
