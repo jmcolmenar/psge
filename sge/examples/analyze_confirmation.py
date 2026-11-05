@@ -20,7 +20,9 @@ Reglas previas
   Clasificación de cada celda: "éxito" (mejora relevante y no inferior), "trade-off" (mejora pero no
   no-inferior: sobre-regularización), "peor" (IC95 de estabilidad por encima de 0), "nulo" (resto).
 - Nivel global: puntuación por bloque = media sobre las celdas del bloque de log(mediana de la celda).
-  Bloque = benchmark (--global_unit benchmark, como dice el plan) o celda (--global_unit cell).
+  DECISIÓN FIJADA (2026-11-05): bloque = celda (24 bloques), pruebas bilaterales. El plan decía bloque =
+  benchmark, pero con 6 bloques ninguna comparación global podía ser significativa bajo Holm.
+  --global_unit benchmark queda como análisis descriptivo adicional.
   Friedman/Iman-Davenport entre psge, psge_kl, sa_psge y sa_psge_lam0. Comparaciones planificadas
   (Wilcoxon exacto sobre los bloques, log-ratio tratamiento/control): primarias SA-PSGE vs PSGE y
   SA-PSGE vs PSGE-KL con Holm; secundaria SA-PSGE vs SA-PSGE(λ = 0). --alternative solo afecta a la
@@ -146,7 +148,8 @@ def logscore(x):
 def main():
     p = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter)
     p.add_argument("--root", default="dumps/confirmation")
-    p.add_argument("--global_unit", choices=["benchmark", "cell"], default="benchmark")
+    # Decisión del investigador (2026-11-05, antes de lanzar): opción B = bloques = celdas, bilateral.
+    p.add_argument("--global_unit", choices=["benchmark", "cell"], default="cell")
     p.add_argument("--alternative", choices=["two-sided", "less"], default="two-sided",
                    help="less = H1 pre-registrada de que el tratamiento REDUCE la métrica")
     p.add_argument("--n_boot", type=int, default=10000)

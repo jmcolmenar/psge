@@ -173,8 +173,11 @@
 - `tests/test_analyze_confirmation.py`: datos SIMULADOS con efectos conocidos; el análisis los recupera.
 - **Problema de potencia del plan**: con la unidad global = benchmark (6), Wilcoxon bilateral tiene p mínimo
   2/64 = 0,031 y Holm sobre 2 comparaciones exige ≤ 0,025: el nivel global nunca puede ser significativo.
-  Opciones en el script: `--global_unit cell` (24 bloques) y/o `--alternative less`. DECISIÓN PENDIENTE del
-  investigador, que debe fijarse antes de lanzar la confirmación.
+  **Decisión del investigador (antes de lanzar): opción B**, bloques = las 24 celdas (benchmark × régimen), pruebas
+  bilaterales. Desviación del plan, documentada: trata como bloques regímenes del mismo benchmark.
+- Coste medido (`server/run_timing.sh`, nguyen5, 500 × 100, AMD EPYC 9655P, 32 hilos): por brazo 41–47 s con
+  m = 20 y 74–103 s con m = 100. SA-PSGE evalúa 23 % más casos (1,29 M frente a 1,05 M con m = 20). Estimación
+  del estudio: ~433 h de CPU, ~13,5 h de reloj con 32 procesos.
 
 ## Tests
 `python3 -m unittest tests.test_stability tests.test_sa_psge tests.test_invalid_rule tests.test_stats_utils tests.test_benchmarks tests.test_analyze_confirmation` → 37 tests OK.
