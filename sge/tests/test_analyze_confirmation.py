@@ -66,7 +66,8 @@ class TestAnalyzeConfirmation(unittest.TestCase):
             self.assertLess(rep["global"]["stab"]["friedman"]["p"], 0.05)
             # Con la unidad del plan (benchmark, 3 bloques aquí) y prueba bilateral, el aviso de potencia aparece
             cp2 = subprocess.run([sys.executable, "-m", "examples.analyze_confirmation", "--root", root,
-                                  "--n_boot", "200", "--output", out + "_b"], capture_output=True, text=True)
+                                  "--global_unit", "benchmark", "--n_boot", "200", "--output", out + "_b"],
+                                 capture_output=True, text=True)
             self.assertEqual(cp2.returncode, 0, cp2.stderr)
             self.assertIn("AVISO", cp2.stdout)
 
