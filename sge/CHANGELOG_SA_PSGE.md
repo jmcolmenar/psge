@@ -191,6 +191,13 @@
 - Tags: `gecco-confirmation-v1` (análisis B) y `-v2` (análisis C) nunca se lanzaron; la confirmación se lanza con
   `gecco-confirmation-v3` (análisis C + almacenamiento separado). Las ejecuciones son idénticas en los tres.
 
+## 2026-11-06: confirmación completada y archivado
+- Confirmación (`gecco-confirmation-v3`, commit `29fb548`): 12 000 ejecuciones emparejadas, 0 errores, 53 539 s
+  (14,9 h) con 32 procesos; 20 semillas completas en las 24 celdas. Informe en `meta/confirmation_20261105-141718/`.
+- `server/archive_runs.sh`: el 98 % de `RUNS_ROOT` es `iteration_0.json` (población inicial, ~2,2 MB por brazo,
+  regenerable con la semilla). El modo esencial archiva gramática por generación, progreso y parámetros
+  (~54 KB por brazo, ~0,4 GB comprimido para la confirmación); `--all`, todo (~17 GB). Verifica y no borra.
+
 ## Tests
 `python3 -m unittest tests.test_stability tests.test_sa_psge tests.test_invalid_rule tests.test_stats_utils tests.test_benchmarks tests.test_analyze_confirmation` → 37 tests OK.
 

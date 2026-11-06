@@ -44,6 +44,7 @@ segundos y muestra el error. Los scripts también se pueden lanzar sin `bg.sh`, 
 | `run_timing.sh [J]` | Coste real de la confirmación medido en nguyen5 con la configuración congelada |
 | `run_confirmation.sh [J]` | Estudio confirmatorio completo (abre el test); exige KL_DELTA numérico |
 | `run_analysis.sh` | Repite en el servidor el análisis confirmatorio (opción C); informe en `meta/analysis_*/` |
+| `archive_runs.sh [--all] DESTINO` | Archiva y verifica `RUNS_ROOT/confirmation` (por defecto, solo gramática por generación y progreso: ~0,4 GB); nunca borra el origen |
 | `launch.sh NOMBRE cmd…` | Cualquier otro experimento con las mismas comprobaciones y metadatos |
 | `bg.sh SCRIPT args…` | Lanza cualquiera de los anteriores en segundo plano, desligado del terminal |
 | `stop.sh [pid]` | Para el último lanzado con `bg.sh` (o el indicado), con todos sus procesos |
