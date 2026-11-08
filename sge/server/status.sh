@@ -17,6 +17,12 @@ for p in nguyen5 nguyen1; do
   done
 done
 
+for d in "$RESULTS_ROOT"/remap_pilot "$RESULTS_ROOT"/remap_confirmation; do
+  [ -d "$d" ] || continue
+  n=$(find "$d" -name '*_d*_e*.json' | wc -l | tr -d ' ')
+  echo; echo "== $(basename "$d"): $n ejecuciones emparejadas (piloto: 1320; confirmación: 44000)"
+done
+
 last="$(ls -dt "$RESULTS_ROOT"/meta/*/ 2>/dev/null | head -1)"
 if [ -n "$last" ]; then
   echo; echo "== Última campaña: $last"

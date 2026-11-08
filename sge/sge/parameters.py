@@ -42,6 +42,13 @@ params = {'PARAMETERS': None,
           'SA_P_MIN': 0.001,
           'SA_TAU': 1,
           'SA_ELITE_RATIO': 0.10,
+          # Estudio de adaptación y re-mapeo (2026-11-08). Los valores por defecto mantienen el
+          # comportamiento anterior: sin trayectoria y con todos los volcados.
+          'TRACK_TRAJECTORY': False,        # trayectoria compacta por generación (engine.get_trajectory())
+          'DUMP_GRAMMAR': True,             # grammar_probabilities.json por generación
+          'DUMP_POPULATION': True,          # iteration_<g>.json cada SAVE_STEP generaciones (incluida la 0)
+          'DUMP_PROGRESS': True,            # progress_report.csv
+          'REMAP_RATE_SAMPLE': None,        # individuos para la tasa de re-mapeo (None = toda la población)
           }
 
 
@@ -162,7 +169,7 @@ def set_parameters(arguments):
     parser.add_argument('--algorithm',
                         dest='ALGORITHM',
                         type=str,
-                        choices=['sge', 'psge', 'psge_kl', 'sa_psge'],
+                        choices=['sge', 'psge', 'psge_kl', 'sa_psge', 'psge_pp'],
                         help='Specifies which algorithm to run: sge, psge, psge_kl, or sa_psge.')
     parser.add_argument('--kl_delta',
                         dest='KL_DELTA',

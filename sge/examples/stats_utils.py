@@ -196,3 +196,55 @@ def friedman_iman_davenport(scores):
     p = 0.0 if math.isinf(F) else f_sf(F, d1, d2)
     return {"mean_ranks": Rj.tolist(), "chi2_friedman": float(chi2), "F_iman_davenport": float(F),
             "df": [d1, d2], "p": float(p), "n_blocks": N, "k": k}
+
+
+def page_trend(scores, max_exact_k=8):
+    """Prueba de tendencia de Page (1963), unilateral: H1 los valores CRECEN con el orden de las columnas.
+
+    scores: matriz bloques x tratamientos, con los tratamientos en el orden hipotético (p. ej., lambda
+    creciente). Se ordena dentro de cada bloque (rangos medios con empates; +inf es el mayor) y
+    L = sum_j j * R_j, con R_j la suma de rangos del tratamiento j.
+
+    p exacto: bajo H0 los rangos de cada bloque son intercambiables, así que la distribución de L es la
+    convolución, bloque a bloque, de sum_j j * r_pi(j) sobre las k! permutaciones de los rangos observados
+    (válida con empates). Si k > max_exact_k se usa la aproximación normal.
+    Devuelve dict con L, p, z (aproximación normal, informativa), n_blocks, k y method.
+    """
+    import itertools
+
+    X = np.asarray(scores, dtype=float)
+    if X.ndim != 2 or X.shape[1] < 2:
+        raise ValueError("scores debe ser una matriz bloques x tratamientos con k >= 2")
+    if np.any(np.isnan(X)):
+        raise ValueError("page_trend no admite NaN")
+    n, k = X.shape
+    w = np.arange(1, k + 1, dtype=float)
+    R = np.array([rankdata(row) for row in X])
+    L = float(np.sum(w * R.sum(axis=0)))
+
+    mean_L = n * k * (k + 1) ** 2 / 4.0
+    var_L = n * k ** 2 * (k + 1) * (k ** 2 - 1) / 144.0       # sin empates
+    z = (L - mean_L) / math.sqrt(var_L) if var_L > 0 else 0.0
+
+    if k <= max_exact_k:
+        # Rangos dobles -> enteros; L2 = 2 L.
+        dist = {0: 1.0}
+        for row in R:
+            r2 = np.rint(2 * row).astype(int)
+            block = {}
+            for perm in itertools.permutations(r2):
+                v = int(np.dot(np.arange(1, k + 1), perm))
+                block[v] = block.get(v, 0) + 1
+            total = float(sum(block.values()))
+            new = {}
+            for a, pa in dist.items():
+                for b, cb in block.items():
+                    new[a + b] = new.get(a + b, 0.0) + pa * cb / total
+            dist = new
+        L2 = int(round(2 * L))
+        p = float(sum(pv for v, pv in dist.items() if v >= L2))
+        method = "exact"
+    else:
+        p = 1.0 - _N.cdf(z)
+        method = "normal"
+    return {"L": L, "p": min(1.0, p), "z": float(z), "n_blocks": n, "k": k, "method": method}

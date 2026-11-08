@@ -20,6 +20,7 @@ import numpy as np
 import sge.grammar as grammar
 from sge.parameters import params
 from sge.operators.update import independent_update, get_grammar_counter
+from sge.operators.phenotype_preserving import reencode_population
 
 
 # ---------------------------------------------------------------------
@@ -325,6 +326,8 @@ def perform_grammar_update(population, best_gen, flag, eval_func, iteration):
       - 'psge': Standard PSGE update (Mégane et al., 2022).
       - 'psge_kl': PSGE with KL-divergence constraint ablation.
       - 'sa_psge': Stability-Aware PSGE.
+      - 'psge_pp': PSGE update followed by phenotype-preserving re-encoding of the population
+                   (see phenotype_preserving.py). Same update, same RNG use as 'psge'.
     """
     alg = params.get("ALGORITHM", "psge").lower()
     lf = params.get("LEARNING_FACTOR", 0.01)
@@ -332,14 +335,17 @@ def perform_grammar_update(population, best_gen, flag, eval_func, iteration):
     if alg == "sge":
         return
 
-    if alg in ("psge", "psge_kl") and lf == 0.0:
+    if alg in ("psge", "psge_kl", "psge_pp") and lf == 0.0:
         return
 
-    if alg == "psge":
+    if alg in ("psge", "psge_pp"):
+        pcfg_old = copy.deepcopy(grammar.get_pcfg()) if alg == "psge_pp" else None
         if not flag:
             independent_update(population, lf, params.get("N_BEST", 1))
         else:
             independent_update([best_gen] + population, lf, params.get("N_BEST", 1))
+        if alg == "psge_pp":
+            reencode_population(population, pcfg_old, grammar.get_pcfg())
 
     elif alg == "psge_kl":
         delta = params.get("KL_DELTA", 6e-5)

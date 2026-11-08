@@ -3,6 +3,16 @@ import numpy as np
 import sge.grammar as grammar
 from sge.parameters import params
 
+# Tamaño efectivo de la mutación (estudio de re-mapeo): codones mutados y cuántos cambian de regla.
+# Solo cuenta; no usa el generador aleatorio. Se reinicia en engine.setup().
+MUTATION_STATS = {"codon_mutations": 0, "rule_changes": 0}
+
+
+def reset_mutation_stats():
+    MUTATION_STATS["codon_mutations"] = 0
+    MUTATION_STATS["rule_changes"] = 0
+
+
 def mutate(p, pmutation):
     p = copy.deepcopy(p)
     p['fitness'] = None
@@ -42,6 +52,8 @@ def mutate(p, pmutation):
                         if codon <= round(prob_aux,3):
                             expansion_possibility = index
                             break
+                MUTATION_STATS["codon_mutations"] += 1
+                MUTATION_STATS["rule_changes"] += int(expansion_possibility != current_value[0])
                 p['genotype'][at_gene][position_to_mutate] = [expansion_possibility,codon,current_depth]
     return p
 

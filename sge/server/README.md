@@ -45,6 +45,9 @@ segundos y muestra el error. Los scripts también se pueden lanzar sin `bg.sh`, 
 | `run_confirmation.sh [J]` | Estudio confirmatorio completo (abre el test); exige KL_DELTA numérico |
 | `run_analysis.sh` | Repite en el servidor el análisis confirmatorio (opción C); informe en `meta/analysis_*/` |
 | `archive_runs.sh [--all] DESTINO` | Archiva y verifica `RUNS_ROOT/confirmation` (por defecto, solo gramática por generación y progreso: ~0,4 GB); nunca borra el origen |
+| `run_remap_smoke.sh [J]` | Estudio de re-mapeo: las 11 condiciones en nguyen1 con población 30 × 5 generaciones (segundos); comprueba que todo arranca y que PSGE-PP no re-mapea |
+| `run_remap_pilot.sh [J]` | Piloto del estudio de re-mapeo: nguyen1 + nguyen5, 2 regímenes, 11 condiciones, 10 × 3 semillas, 500 × 100, solo validación; resumen en `meta/remap_pilot_*/summary.txt` |
+| `run_remap_confirmation.sh [J]` | Confirmación del estudio de re-mapeo (abre el test); exige `FROZEN: true` en `parameters/remap_study.yml` |
 | `launch.sh NOMBRE cmd…` | Cualquier otro experimento con las mismas comprobaciones y metadatos |
 | `bg.sh SCRIPT args…` | Lanza cualquiera de los anteriores en segundo plano, desligado del terminal |
 | `stop.sh [pid]` | Para el último lanzado con `bg.sh` (o el indicado), con todos sus procesos |

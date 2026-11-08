@@ -1,0 +1,35 @@
+# Estudio "ritmo de adaptación de la gramática, re-mapeo y estabilidad en PSGE" (plan del 2026-11-08).
+# BORRADOR: FROZEN = false hasta cerrar el piloto (fase 5) y el prerregistro (fase 6). La confirmación
+# (examples/run_remap_study.py --phase confirm) se niega a lanzar mientras FROZEN no sea true.
+# Fichero de parámetros completo: se pasa tal cual como parameters_file al motor.
+FROZEN: false
+
+# --- Presupuesto y operadores: los del estudio anterior (gecco_frozen.yml), comunes a las 11 condiciones ---
+POPSIZE: 500
+GENERATIONS: 100
+ELITISM: 5                      # 1 % de la población
+PROB_CROSSOVER: 0.9
+PROB_MUTATION: 0.05
+TSIZE: 3
+MIN_TREE_DEPTH: 12
+MAX_TREE_DEPTH: 12
+REMAP: True                     # las élites se re-evalúan con la PCFG vigente (como antes)
+INCLUDE_GENOTYPE: False
+VERBOSE: False
+
+# --- PSGE ---
+N_BEST: 1
+ADAPTIVE_LF: False
+LEARNING_FACTOR: 0.01           # valor por defecto; cada condición fija el suyo (REMAP_LAMBDAS)
+
+# --- Factor manipulado (RQ-A): rejilla logarítmica de lambda, el piloto la confirma o ajusta ---
+REMAP_LAMBDAS: [0.005, 0.01, 0.02, 0.05, 0.1]
+
+# --- Instrumentación: trayectoria compacta dentro del JSON y sin volcados pesados por generación ---
+TRACK_TRAJECTORY: True
+REMAP_RATE_SAMPLE: 100          # tasa de re-mapeo sobre 100 individuos a rangos equiespaciados de la
+                                # población ordenada (sin azar): ~0,1 s por generación en vez de ~0,6 s
+DUMP_GRAMMAR: False
+DUMP_POPULATION: False
+DUMP_PROGRESS: False
+SAVE_STEP: 1000000

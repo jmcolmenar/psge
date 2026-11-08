@@ -98,6 +98,67 @@ def vladislavleva7(x):
     return (x0 - 3.0) * (x1 - 3.0) + 2.0 * np.sin((x0 - 4.0) * (x1 - 4.0))
 
 
+# ---------------------------------------------------------------------
+# Benchmarks del estudio de adaptación y re-mapeo (2026-11-08). Selección con la regla escrita en
+# BENCHMARKS_REMAP_STUDY.md. Numeración de McDermott et al. (GECCO 2012). Como en el estudio anterior,
+# S se muestrea uniforme en el dominio de entrenamiento (las rejillas E[...] originales no permiten
+# el protocolo add-one con m arbitrario) y el test, uniforme en el dominio de test.
+# ---------------------------------------------------------------------
+
+def nguyen6(x):
+    """Nguyen-6: sin(x) + sin(x + x^2), U[-1, 1] (Uy et al. 2011)."""
+    x0 = x[0] if isinstance(x, (list, tuple, np.ndarray)) else x
+    return np.sin(x0) + np.sin(x0 + x0**2)
+
+
+def nguyen8(x):
+    """Nguyen-8: sqrt(x), U[0, 4] (Uy et al. 2011)."""
+    x0 = x[0] if isinstance(x, (list, tuple, np.ndarray)) else x
+    return np.sqrt(x0)
+
+
+def nguyen10(x):
+    """Nguyen-10: 2 sin(x) cos(y), U[0, 1]^2 (Uy et al. 2011)."""
+    return 2.0 * np.sin(x[0]) * np.cos(x[1])
+
+
+def nguyen11(x):
+    """Nguyen-11: x^y, U[0, 1]^2 (Uy et al. 2011)."""
+    return float(x[0]) ** float(x[1])
+
+
+def nguyen12(x):
+    """Nguyen-12: x^4 - x^3 + y^2/2 - y, U[0, 1]^2 (Uy et al. 2011)."""
+    return x[0]**4 - x[0]**3 + 0.5 * x[1]**2 - x[1]
+
+
+def keijzer4(x):
+    """Keijzer-4: x^3 e^-x cos(x) sin(x) (sin^2(x) cos(x) - 1); entrenamiento [0, 10], test [0.05, 10.05]."""
+    x0 = x[0] if isinstance(x, (list, tuple, np.ndarray)) else x
+    return x0**3 * np.exp(-x0) * np.cos(x0) * np.sin(x0) * (np.sin(x0)**2 * np.cos(x0) - 1.0)
+
+
+def keijzer9(x):
+    """Keijzer-9: arcsinh(x) = ln(x + sqrt(x^2 + 1)), [0, 100]."""
+    x0 = x[0] if isinstance(x, (list, tuple, np.ndarray)) else x
+    return np.arcsinh(x0)
+
+
+def keijzer11(x):
+    """Keijzer-11: x y + sin((x - 1)(y - 1)), [-3, 3]^2."""
+    return x[0] * x[1] + np.sin((x[0] - 1.0) * (x[1] - 1.0))
+
+
+def keijzer14(x):
+    """Keijzer-14: 8 / (2 + x^2 + y^2), [-3, 3]^2."""
+    return 8.0 / (2.0 + x[0]**2 + x[1]**2)
+
+
+def keijzer15(x):
+    """Keijzer-15: x^3 / 5 + y^3 / 2 - y - x, [-3, 3]^2."""
+    return x[0]**3 / 5.0 + x[1]**3 / 2.0 - x[1] - x[0]
+
+
 BENCHMARK_SPECS = {
     "nguyen1": {
         "function": nguyen1,
@@ -157,8 +218,35 @@ BENCHMARK_SPECS = {
         "test_domain": [(-0.25, 6.35), (-0.25, 6.35)],
         "grammar": "grammars/regression.pybnf",
         "description": "Vladislavleva-7: 2D interaction"
-    }
+    },
+    # --- Estudio de adaptación y re-mapeo: confirmación (BENCHMARKS_REMAP_STUDY.md) ---
+    "nguyen6": {"function": nguyen6, "n_vars": 1, "domain": [(-1.0, 1.0)],
+                "grammar": "grammars/regression_1v.pybnf", "description": "Nguyen-6: sin(x) + sin(x + x^2)"},
+    "nguyen8": {"function": nguyen8, "n_vars": 1, "domain": [(0.0, 4.0)],
+                "grammar": "grammars/regression_1v.pybnf", "description": "Nguyen-8: sqrt(x)"},
+    "nguyen10": {"function": nguyen10, "n_vars": 2, "domain": [(0.0, 1.0), (0.0, 1.0)],
+                 "grammar": "grammars/regression.pybnf", "description": "Nguyen-10: 2 sin(x) cos(y)"},
+    "nguyen11": {"function": nguyen11, "n_vars": 2, "domain": [(0.0, 1.0), (0.0, 1.0)],
+                 "grammar": "grammars/regression.pybnf", "description": "Nguyen-11: x^y"},
+    "nguyen12": {"function": nguyen12, "n_vars": 2, "domain": [(0.0, 1.0), (0.0, 1.0)],
+                 "grammar": "grammars/regression.pybnf", "description": "Nguyen-12: x^4 - x^3 + y^2/2 - y"},
+    "keijzer4": {"function": keijzer4, "n_vars": 1, "train_domain": [(0.0, 10.0)], "test_domain": [(0.05, 10.05)],
+                 "grammar": "grammars/regression_1v.pybnf",
+                 "description": "Keijzer-4: x^3 e^-x cos x sin x (sin^2 x cos x - 1)"},
+    "keijzer9": {"function": keijzer9, "n_vars": 1, "domain": [(0.0, 100.0)],
+                 "grammar": "grammars/regression_1v.pybnf", "description": "Keijzer-9: arcsinh(x)"},
+    "keijzer11": {"function": keijzer11, "n_vars": 2, "domain": [(-3.0, 3.0), (-3.0, 3.0)],
+                  "grammar": "grammars/regression.pybnf", "description": "Keijzer-11: xy + sin((x-1)(y-1))"},
+    "keijzer14": {"function": keijzer14, "n_vars": 2, "domain": [(-3.0, 3.0), (-3.0, 3.0)],
+                  "grammar": "grammars/regression.pybnf", "description": "Keijzer-14: 8 / (2 + x^2 + y^2)"},
+    "keijzer15": {"function": keijzer15, "n_vars": 2, "domain": [(-3.0, 3.0), (-3.0, 3.0)],
+                  "grammar": "grammars/regression.pybnf", "description": "Keijzer-15: x^3/5 + y^3/2 - y - x"},
 }
+
+# Conjuntos del estudio de adaptación y re-mapeo (congelados por BENCHMARKS_REMAP_STUDY.md).
+REMAP_PILOT_BENCHMARKS = ["nguyen1", "nguyen5"]
+REMAP_CONFIRM_BENCHMARKS = ["nguyen6", "nguyen8", "nguyen10", "nguyen11", "nguyen12",
+                            "keijzer4", "keijzer9", "keijzer11", "keijzer14", "keijzer15"]
 
 
 # =====================================================================
@@ -419,7 +507,21 @@ def calculate_stability_metrics(model_S_phenotype, model_S_plus_z_phenotype, S, 
     else:
         nrmse_test_fS = nrmse_test_fSz = gen_gap_fS = gen_gap_fSz = None
 
+    # 7. Brecha de generalización en las unidades de APG+ATG (estudio de re-mapeo, RQ-E):
+    #    |media de V(f_S, .) en el conjunto externo - media de V(f_S, z_i) en S|, con V normalizada por var_y.
+    def _mean_norm_loss(dataset):
+        return float(np.mean([calculate_point_squared_loss(model_S_phenotype, pt, var_y=var_y) for pt in dataset]))
+
+    mse_val_norm_fS = _mean_norm_loss(val_set) if val_set else None
+    mse_test_norm_fS = _mean_norm_loss(test_set) if test_set else None
+    gap_val_norm_fS = abs(mse_val_norm_fS - mean_in_sample_loss_fS_norm) if val_set else None
+    gap_test_norm_fS = abs(mse_test_norm_fS - mean_in_sample_loss_fS_norm) if test_set else None
+
     return {
+        "mse_val_norm_fS": mse_val_norm_fS,
+        "mse_test_norm_fS": mse_test_norm_fS,
+        "gen_gap_val_norm_fS": gap_val_norm_fS,
+        "gen_gap_test_norm_fS": gap_test_norm_fS,
         "loss_fS_z": loss_fS_z_raw,
         "loss_fSz_z": loss_fSz_z_raw,
         "loss_fS_z_norm": loss_fS_z_norm,

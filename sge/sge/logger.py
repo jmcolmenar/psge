@@ -46,10 +46,14 @@ def evolution_progress(generation, pop, best, best_gen, gram):
     if params['VERBOSE']:
         print(data)
 
-    save_progress_to_file(data)
+    if params.get('DUMP_PROGRESS', True):
+        save_progress_to_file(data)
 
-    if generation % params['SAVE_STEP'] == 0:
+    if params.get('DUMP_POPULATION', True) and generation % params['SAVE_STEP'] == 0:
         save_step(generation, pop)
+
+    if not params.get('DUMP_GRAMMAR', True):
+        return
 
     grammar_data = {"generation": generation, "grammar": gram}
 
