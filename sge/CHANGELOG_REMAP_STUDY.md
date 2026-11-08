@@ -80,3 +80,47 @@ PSGE-PP sin re-mapeo y PSGE con él; SGEF plano; brecha; benchmarks; Page.
   si hiciera falta: 3 semillas evolutivas.
 - Disco: ~50 KB por ejecución emparejada (trayectorias de 101 generaciones × 2 brazos) → ~2 GB en la
   confirmación, en `RESULTS_ROOT`; `RUNS_ROOT` solo guarda `parameters.json` de cada brazo.
+
+## 2026-11-08: piloto (fase 5)
+
+Campaña `meta/remap_pilot_20261108-204010` (servidor, commit 85628b5; el «dirty» del registro es solo el
+bit de ejecución de `server/archive_runs.sh`). 1320 ejecuciones emparejadas, 0 errores, 0 modelos no
+evaluables, 1 h 35 min con 32 procesos. La prueba mínima da en el servidor exactamente los mismos valores
+que en el portátil. Solo validación; el test no se generó.
+
+| Pregunta del piloto | Resultado | Decisión |
+| --- | --- | --- |
+| ¿La entropía baja de forma gradual con λ? | Mediana final 1,0 (SGEF), ~0,93, ~0,8, ~0,65, 0,35–0,54, 0,30–0,51; mínimo 0,19 | Rejilla de λ sin cambios |
+| ¿λ = 0,1 colapsa la gramática o dispara los inválidos? | No: entropía mínima 0,19, inválidos 0 | — |
+| ¿Funciona la manipulación de C? | Máximo por actualización: PSGE 26–77 % de la población; PSGE-PP 0 (λ ≤ 0,02) y 2–5 % (λ ≥ 0,05) por codones imposibles de conservar (≤ 1,1e-4) | — |
+| ¿Cambia el tamaño efectivo de la mutación? | Fracción de mutaciones que cambian de regla menor en PSGE (p. ej., 0,29 frente a 0,33 en Nguyen-1, λ = 0,1) | Se informa como diferencia entre variantes |
+| Coste | ~96 s por par con m = 20 y ~176 s con m = 100; PSGE-PP ~10 % más lento | Confirmación ~52 h con 32 procesos |
+| Réplicas | DE entre semillas de datos del log-ratio emparejado 0,5–1,7 (celdas sin soluciones exactas) | 20 × 5 sin cambios |
+
+Dos problemas del plan de análisis, resueltos antes de congelar (decisiones del 2026-11-08):
+
+1. **Soluciones exactas.** En Nguyen-1, m = 100, sin ruido, el 24 % de las ejecuciones encuentra la función
+   y APG+ATG baja hasta 1e-34 (redondeo); la DE del log entre semillas sube de ~1 a 5–33.
+   **Decisión:** suelo EPS = 1e-6 (unidades normalizadas) para APG+ATG, APG, ATG y la brecha antes de
+   tomar logaritmos, y sqrt(EPS) = 1e-3 para la NRMSE (el ensayo del análisis con el piloto mostró que
+   sin ese suelo el cociente de NRMSE también explota). Sensibilidad con 1e-4 y 1e-8.
+2. **No inferioridad en NRMSE inalcanzable.** Con 20 semillas de datos, la semianchura del IC90 por celda
+   del cociente de NRMSE es del 21–45 % en celdas sin soluciones exactas, frente a un margen del 2 %: H-C1
+   no podría confirmarse nunca. **Decisión (opción A):** la NRMSE deja de condicionar H-C1 y pasa a un
+   contraste secundario propio a nivel de benchmark: no inferioridad si el extremo superior del IC BCa 90 %
+   de la media entre benchmarks de log(NRMSE PP / PSGE) es < log(1,10). La tabla por celda y el Pareto
+   quedan como descripción.
+
+## 2026-11-08: prerregistro (fase 6)
+
+- `examples/analyze_remap_study.py`: análisis completo fijado (reglas, familia principal H-A1 + H-C1 con
+  Holm, secundarios NR, comprobaciones de la manipulación, H-A2, H-A3, H-C2, H-E1, H-E2, robustez y
+  sensibilidad a EPS). Ensayado sobre el piloto con `--split val`.
+- `tests/test_analyze_remap.py` (9 tests) con datos simulados de efecto conocido: el nulo no se confirma;
+  efectos de λ (+0,3 por nivel) y de PSGE-PP (−0,5) se confirman con el tamaño correcto; Holm; no
+  inferioridad (NRMSE igual → sí; +30 % → no, sin afectar a H-C1); seguimiento de la brecha; interacción
+  de H-A3; soluciones exactas e inválidos; semillas incompletas. Calibración del error de tipo I con 300
+  simulaciones nulas: H-A1 1,7 % y H-C1 2,3 % con α = 0,025; 2,3 % y 3,0 % con α = 0,05.
+- `parameters/remap_study.yml`: **`FROZEN: true`**. `server/run_remap_confirmation.sh` ejecuta el análisis
+  al terminar; `server/run_remap_analysis.sh` lo repite.
+- Tag `remap-confirmation-v1`.
