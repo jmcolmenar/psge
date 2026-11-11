@@ -124,3 +124,23 @@ Dos problemas del plan de análisis, resueltos antes de congelar (decisiones del
 - `parameters/remap_study.yml`: **`FROZEN: true`**. `server/run_remap_confirmation.sh` ejecuta el análisis
   al terminar; `server/run_remap_analysis.sh` lo repite.
 - Tag `remap-confirmation-v1`.
+
+## 2026-11-11: confirmación y desviación documentada
+
+Campaña `meta/remap_confirmation_20261108-234725` (commit 540f060, tag `remap-confirmation-v1`):
+43 984 ejecuciones emparejadas correctas y **16 con error** (`OverflowError`), 53 h de reloj.
+
+**Causa.** `calculate_point_squared_loss` calcula `(y_hat - y)**2` con floats de Python; si |y_hat| supera
+~1e154, Python lanza `OverflowError` en lugar de devolver inf, y la pérdida no llega a topearse en 1e6.
+Ocurre en el cálculo de métricas, después de que las dos ejecuciones evolutivas hayan terminado; lo dispara
+sobre todo la brecha de test (1000 puntos, con zona de extrapolación). Afectó a Keijzer-14 (13), Keijzer-4
+(2) y Nguyen-8 (1), todas con m = 20.
+
+**Consecuencia en el análisis.** Por la regla R4 (semillas de datos completas), esas 16 ejecuciones dejaron
+fuera 10 combinaciones celda-semilla de datos (Keijzer-14 con m = 20 y sin ruido se quedó con 14 semillas).
+
+**Corrección (desviación del código congelado).** Capturar `OverflowError` y asignar la pérdida tope
+(1e6), igual que cualquier otra pérdida enorme. Solo cambia el camino que antes lanzaba la excepción, así
+que las 43 984 ejecuciones ya hechas no cambian. Test `TestOverflowLoss`. Se re-ejecutan las 16 tareas
+(el lanzador reutiliza las hechas) con `ALLOW_COMMIT_CHANGE=1` y se repite el análisis prerregistrado sin
+cambios. Tag `remap-confirmation-v1.1`.

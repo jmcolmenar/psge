@@ -204,6 +204,17 @@ class TestGeneralizationGap(unittest.TestCase):
         self.assertIsNone(mt["gen_gap_val_norm_fS"])
 
 
+class TestOverflowLoss(unittest.TestCase):
+    def test_huge_prediction_is_capped_not_raised(self):
+        from sge.stability import calculate_point_squared_loss
+        self.assertEqual(calculate_point_squared_loss("1e200", [1.0, 0.0]), 1e6)
+        self.assertEqual(calculate_point_squared_loss("1e200", [1.0, 0.0], var_y=2.0), 5e5)
+        self.assertAlmostEqual(calculate_point_squared_loss("x[0]*2", [1.5, 1.0]), 4.0)
+        b = generate_add_one_datasets("nguyen1", m=20, seed_data=3, n_test=50, n_val=0)
+        mt = calculate_stability_metrics("1e200", "x[0]", b["S"], b["z"], test_set=b["test_set"], var_y=b["var_y_S"])
+        self.assertTrue(np.isfinite(mt["gen_gap_test_norm_fS"]))
+
+
 class TestRemapBenchmarks(unittest.TestCase):
     def test_values(self):
         F = {k: BENCHMARK_SPECS[k]["function"] for k in REMAP_CONFIRM_BENCHMARKS}

@@ -410,7 +410,12 @@ def calculate_point_squared_loss(phenotype_str, point, invalid_loss=1e6, var_y=N
     if y_hat is None:
         loss = invalid_loss
     else:
-        loss = (y_hat - y_target)**2
+        try:
+            loss = (y_hat - y_target)**2
+        except OverflowError:
+            # float ** 2 raises (instead of returning inf) when |y_hat| > ~1e154: same cap as any huge loss.
+            # Found in the remap confirmation (16 runs crashed, 2026-11-11); only this path changes.
+            loss = invalid_loss
         if np.isnan(loss) or np.isinf(loss) or loss > invalid_loss:
             loss = invalid_loss
 
